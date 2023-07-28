@@ -2,7 +2,7 @@
 
 namespace calories_api.persistence;
 
-public interface ICalorieRepository
+public interface ICaloriesRepository
 {
     Task<CalorieEntry?> Create(CalorieEntry entry);
     Task<CalorieEntry?> Retrieve(Guid id);

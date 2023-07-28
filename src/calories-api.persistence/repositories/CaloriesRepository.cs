@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace calories_api.persistence;
 
-public class CalorieRepository : ICalorieRepository
+public class CaloriesRepository : ICaloriesRepository
 {
     private readonly ApplicationDbContext _context;
 
-    public CalorieRepository(ApplicationDbContext context)
+    public CaloriesRepository(ApplicationDbContext context)
     {
         _context = context;
     }
