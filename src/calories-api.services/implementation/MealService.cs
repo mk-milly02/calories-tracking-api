@@ -26,17 +26,17 @@ public class MealService : IMealService
     {
         if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
 
-        Meal entry = _mapper.Map<Meal>(request);
-        Meal? addedEntry = await _repository.Create(entry);
-        return addedEntry is null ? null : _mapper.Map<MealResponse>(addedEntry);
+        Meal meal = _mapper.Map<Meal>(request);
+        Meal? addedMeal = await _repository.Create(meal);
+        return addedMeal is null ? null : _mapper.Map<MealResponse>(addedMeal);
     }
 
     public async Task<MealResponse?> EditMeal(Guid id, UpdateMealRequest request)
     {
-        Meal entry = _mapper.Map<Meal>(request);
-        entry.Id = id;
-        Meal? updatedEntry = await _repository.Update(entry);
-        return updatedEntry is null ? null : _mapper.Map<MealResponse>(updatedEntry);
+        Meal meal = _mapper.Map<Meal>(request);
+        meal.Id = id;
+        Meal? updatedMeal = await _repository.Update(meal);
+        return updatedMeal is null ? null : _mapper.Map<MealResponse>(updatedMeal);
     }
 
     public async Task<IEnumerable<MealResponse>> GetAllMeals(QueryParameters query)
@@ -46,8 +46,21 @@ public class MealService : IMealService
 
         foreach (Meal meal in meals)
         {
-            MealResponse calorieEntry = _mapper.Map<MealResponse>(meal);
-            output.Add(calorieEntry);
+            MealResponse mealResponse = _mapper.Map<MealResponse>(meal);
+            output.Add(mealResponse);
+        }
+        return output;
+    }
+
+    public async Task<IEnumerable<MealResponse>> GetAllUserMeals(Guid userId, QueryParameters query)
+    {
+        List<MealResponse> output = new();
+        IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId, query);
+
+        foreach (Meal meal in meals)
+        {
+            MealResponse mealResponse = _mapper.Map<MealResponse>(meal);
+            output.Add(mealResponse);
         }
         return output;
     }
