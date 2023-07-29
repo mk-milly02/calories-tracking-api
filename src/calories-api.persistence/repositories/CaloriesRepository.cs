@@ -34,9 +34,16 @@ public class CaloriesRepository : ICaloriesRepository
         return await _context.Calories.AsNoTracking().SingleOrDefaultAsync(entry => entry.EntryId.Equals(id));
     }
 
-    public async Task<IEnumerable<CalorieEntry>> RetrieveAll()
+    public async Task<IEnumerable<CalorieEntry>> RetrieveAll(QueryParameters query)
     {
-        return await _context.Calories.AsNoTracking().ToListAsync();
+        IEnumerable<CalorieEntry> entries = await _context.Calories.AsNoTracking().ToListAsync();
+
+        if(!string.IsNullOrEmpty(query.SeachString)) 
+        { 
+            entries = entries.Where(entry => entry.Text!.Contains(query.SeachString)); 
+        }
+
+        return entries.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
     }
 
     public async Task<CalorieEntry?> Update(CalorieEntry entry)
