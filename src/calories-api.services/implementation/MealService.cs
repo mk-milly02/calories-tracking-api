@@ -7,14 +7,14 @@ using Newtonsoft.Json;
 
 namespace calories_api.services;
 
-public class CaloriesService : ICaloriesService
+public class MealService : IMealService
 {
-    private readonly ICaloriesRepository _repository;
+    private readonly IMealRepository _repository;
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly IMapper _mapper;
 
-    public CaloriesService(ICaloriesRepository repository, HttpClient httpClient, IConfiguration configuration, IMapper mapper)
+    public MealService(IMealRepository repository, HttpClient httpClient, IConfiguration configuration, IMapper mapper)
     {
         _repository = repository;
         _httpClient = httpClient;
@@ -22,43 +22,43 @@ public class CaloriesService : ICaloriesService
         _mapper = mapper;
     }
     
-    public async Task<CalorieEntryResponse?> AddCalorieEntry(CreateCalorieEntryRequest request)
+    public async Task<MealResponse?> AddMeal(CreateMealRequest request)
     {
         if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
 
-        CalorieEntry entry = _mapper.Map<CalorieEntry>(request);
-        CalorieEntry? addedEntry = await _repository.Create(entry);
-        return addedEntry is null ? null : _mapper.Map<CalorieEntryResponse>(addedEntry);
+        Meal entry = _mapper.Map<Meal>(request);
+        Meal? addedEntry = await _repository.Create(entry);
+        return addedEntry is null ? null : _mapper.Map<MealResponse>(addedEntry);
     }
 
-    public async Task<CalorieEntryResponse?> EditCalorieEntry(Guid id, UpdateCalorieEntryRequest request)
+    public async Task<MealResponse?> EditMeal(Guid id, UpdateMealRequest request)
     {
-        CalorieEntry entry = _mapper.Map<CalorieEntry>(request);
-        entry.EntryId = id;
-        CalorieEntry? updatedEntry = await _repository.Update(entry);
-        return updatedEntry is null ? null : _mapper.Map<CalorieEntryResponse>(updatedEntry);
+        Meal entry = _mapper.Map<Meal>(request);
+        entry.Id = id;
+        Meal? updatedEntry = await _repository.Update(entry);
+        return updatedEntry is null ? null : _mapper.Map<MealResponse>(updatedEntry);
     }
 
-    public async Task<IEnumerable<CalorieEntryResponse>> GetAllCalorieEntries(QueryParameters query)
+    public async Task<IEnumerable<MealResponse>> GetAllMeals(QueryParameters query)
     {
-        List<CalorieEntryResponse> calorieEntries = new();
-        IEnumerable<CalorieEntry> entries = await _repository.RetrieveAll(query);
+        List<MealResponse> output = new();
+        IEnumerable<Meal> meals = await _repository.RetrieveAll(query);
 
-        foreach (CalorieEntry entry in entries)
+        foreach (Meal meal in meals)
         {
-            CalorieEntryResponse calorieEntry = _mapper.Map<CalorieEntryResponse>(entry);
-            calorieEntries.Add(calorieEntry);
+            MealResponse calorieEntry = _mapper.Map<MealResponse>(meal);
+            output.Add(calorieEntry);
         }
-        return calorieEntries;
+        return output;
     }
 
-    public async Task<CalorieEntryResponse?> GetCalorieEntry(Guid id)
+    public async Task<MealResponse?> GetMeal(Guid id)
     {
-        CalorieEntry? entry = await _repository.Retrieve(id);
-        return entry is null ? null : _mapper.Map<CalorieEntryResponse>(entry);
+        Meal? meal = await _repository.Retrieve(id);
+        return meal is null ? null : _mapper.Map<MealResponse>(meal);
     }
 
-    public async Task<bool?> RemoveCalorieEntry(Guid id)
+    public async Task<bool?> RemoveMeal(Guid id)
     {
         return await _repository.Delete(id);
     }

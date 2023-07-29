@@ -4,39 +4,39 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace calories_api.persistence;
 
-public class CaloriesRepository : ICaloriesRepository
+public class MealRepository : IMealRepository
 {
     private readonly ApplicationDbContext _context;
 
-    public CaloriesRepository(ApplicationDbContext context)
+    public MealRepository(ApplicationDbContext context)
     {
         _context = context;
     }
 
-    public async Task<CalorieEntry?> Create(CalorieEntry entry)
+    public async Task<Meal?> Create(Meal entry)
     {
-        EntityEntry<CalorieEntry> added = await _context.Calories.AddAsync(entry);
+        EntityEntry<Meal> added = await _context.Meals.AddAsync(entry);
         return await _context.SaveChangesAsync() > 0 ? added.Entity : null;
     }
 
     public async Task<bool?> Delete(Guid id)
     {
-        CalorieEntry? existingEntry = await _context.Calories.FindAsync(id);
+        Meal? existingEntry = await _context.Meals.FindAsync(id);
 
         if (existingEntry is null) { return null;}
-        _context.Calories.Remove(existingEntry);
+        _context.Meals.Remove(existingEntry);
 
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public async Task<CalorieEntry?> Retrieve(Guid id)
+    public async Task<Meal?> Retrieve(Guid id)
     {
-        return await _context.Calories.AsNoTracking().SingleOrDefaultAsync(entry => entry.EntryId.Equals(id));
+        return await _context.Meals.AsNoTracking().SingleOrDefaultAsync(entry => entry.Id.Equals(id));
     }
 
-    public async Task<IEnumerable<CalorieEntry>> RetrieveAll(QueryParameters query)
+    public async Task<IEnumerable<Meal>> RetrieveAll(QueryParameters query)
     {
-        IEnumerable<CalorieEntry> entries = await _context.Calories.AsNoTracking().ToListAsync();
+        IEnumerable<Meal> entries = await _context.Meals.AsNoTracking().ToListAsync();
 
         if(!string.IsNullOrEmpty(query.SeachString)) 
         { 
@@ -46,9 +46,9 @@ public class CaloriesRepository : ICaloriesRepository
         return entries.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
     }
 
-    public async Task<CalorieEntry?> Update(CalorieEntry entry)
+    public async Task<Meal?> Update(Meal entry)
     {
-        EntityEntry<CalorieEntry> updated = _context.Calories.Update(entry);
+        EntityEntry<Meal> updated = _context.Meals.Update(entry);
         return await _context.SaveChangesAsync() > 0 ? updated.Entity : null;
     }
 }

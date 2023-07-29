@@ -1,6 +1,6 @@
 ﻿namespace calories_api.domain;
 
-public class UpdateCalorieEntryRequest
+public class UpdateMealRequest
 {
     public string? Text { get; set; }
     public double NumberOfCalories { get; set; }

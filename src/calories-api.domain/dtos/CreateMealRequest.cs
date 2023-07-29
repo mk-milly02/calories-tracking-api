@@ -2,7 +2,7 @@
 
 namespace calories_api.domain;
 
-public class CreateCalorieEntryRequest
+public class CreateMealRequest
 {
     public Guid UserId { get; set; }
 

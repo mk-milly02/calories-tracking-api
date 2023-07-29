@@ -8,14 +8,14 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<CalorieEntry> Calories { get; set; }
+    public DbSet<Meal> Meals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<CalorieEntry>().HasKey(e => e.EntryId);
-        builder.Entity<CalorieEntry>().Property(e => e.Text).HasMaxLength(100);
+        builder.Entity<Meal>().HasKey(e => e.Id);
+        builder.Entity<Meal>().Property(e => e.Text).HasMaxLength(100);
 
-        builder.Entity<User>().HasMany(e => e.Calories).WithOne().HasForeignKey(e => e.EntryId);
+        builder.Entity<User>().HasMany(e => e.Meals).WithOne().HasForeignKey(e => e.Id);
 
         builder.Entity<Role>().HasData
         (

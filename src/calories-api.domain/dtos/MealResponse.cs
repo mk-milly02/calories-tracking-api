@@ -1,6 +1,6 @@
 ﻿namespace calories_api.domain;
 
-public class CalorieEntryResponse
+public class MealResponse
 {
     public Guid EntryId { get; set; }
     public Guid UserId { get; set; }

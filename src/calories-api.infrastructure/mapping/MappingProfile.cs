@@ -7,12 +7,12 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<CreateCalorieEntryRequest, CalorieEntry>();
+        CreateMap<CreateMealRequest, Meal>();
 
-        CreateMap<CalorieEntry, CalorieEntryResponse>()
+        CreateMap<Meal, MealResponse>()
             .ForMember(x => x.CreatedOn, options => options.MapFrom<CreatedOnResolver>())
             .ForMember(x => x.CreatedAt, options => options.MapFrom<CreatedAtResolver>());
 
-        CreateMap<UpdateCalorieEntryRequest, CalorieEntry>();
+        CreateMap<UpdateMealRequest, Meal>();
     }
 }
