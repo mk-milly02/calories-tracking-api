@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using AutoMapper;
 using calories_api.domain;
 using calories_api.persistence;
 using Microsoft.Extensions.Configuration;
@@ -11,37 +12,55 @@ public class CaloriesService : ICaloriesService
     private readonly ICaloriesRepository _repository;
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly IMapper _mapper;
 
-    public CaloriesService(ICaloriesRepository repository, HttpClient httpClient, IConfiguration configuration)
+    public CaloriesService(ICaloriesRepository repository, HttpClient httpClient, IConfiguration configuration, IMapper mapper)
     {
         _repository = repository;
         _httpClient = httpClient;
         _configuration = configuration;
+        _mapper = mapper;
     }
     
-    public Task<CalorieEntryResponse?> AddCalorieEntry(CreateCalorieEntryRequest request)
+    public async Task<CalorieEntryResponse?> AddCalorieEntry(CreateCalorieEntryRequest request)
     {
-        throw new NotImplementedException();
+        if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
+
+        CalorieEntry entry = _mapper.Map<CalorieEntry>(request);
+        CalorieEntry? addedEntry = await _repository.Create(entry);
+        return addedEntry is null ? null : _mapper.Map<CalorieEntryResponse>(addedEntry);
     }
 
-    public Task<CalorieEntryResponse?> EditCalorieEntry(Guid id, UpdateCalorieEntryRequest request)
+    public async Task<CalorieEntryResponse?> EditCalorieEntry(Guid id, UpdateCalorieEntryRequest request)
     {
-        throw new NotImplementedException();
+        CalorieEntry entry = _mapper.Map<CalorieEntry>(request);
+        entry.EntryId = id;
+        CalorieEntry? updatedEntry = await _repository.Update(entry);
+        return updatedEntry is null ? null : _mapper.Map<CalorieEntryResponse>(updatedEntry);
     }
 
-    public Task<IEnumerable<CalorieEntryResponse>> GetAllCalorieEntries()
+    public async Task<IEnumerable<CalorieEntryResponse>> GetAllCalorieEntries(QueryParameters query)
     {
-        throw new NotImplementedException();
+        List<CalorieEntryResponse> calorieEntries = new();
+        IEnumerable<CalorieEntry> entries = await _repository.RetrieveAll(query);
+
+        foreach (CalorieEntry entry in entries)
+        {
+            CalorieEntryResponse calorieEntry = _mapper.Map<CalorieEntryResponse>(entry);
+            calorieEntries.Add(calorieEntry);
+        }
+        return calorieEntries;
     }
 
-    public Task<CalorieEntryResponse?> GetCalorieEntry(Guid id)
+    public async Task<CalorieEntryResponse?> GetCalorieEntry(Guid id)
     {
-        throw new NotImplementedException();
+        CalorieEntry? entry = await _repository.Retrieve(id);
+        return entry is null ? null : _mapper.Map<CalorieEntryResponse>(entry);
     }
 
-    public Task<bool?> RemoveCalorieEntry(Guid id)
+    public async Task<bool?> RemoveCalorieEntry(Guid id)
     {
-        throw new NotImplementedException();
+        return await _repository.Delete(id);
     }
 
     private async Task<double> RetrieveNumberOfCalories(string query)
