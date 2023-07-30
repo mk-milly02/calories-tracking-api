@@ -22,12 +22,12 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
             new Role
             {
                 Id = Guid.NewGuid(),
-                Name = "Regular User"
+                Name = "RegularUser"
             },
             new Role
             {
                 Id = Guid.NewGuid(),
-                Name = "User Manager"
+                Name = "UserManager"
             },
             new Role
             {

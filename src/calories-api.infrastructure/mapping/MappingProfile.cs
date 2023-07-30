@@ -14,5 +14,9 @@ public class MappingProfile : Profile
             .ForMember(x => x.CreatedAt, options => options.MapFrom<CreatedAtResolver>());
 
         CreateMap<UpdateMealRequest, Meal>();
+
+        CreateMap<UserRegistrationRequest, User>();
+
+        CreateMap<User, UserResponse>();
     }
 }
