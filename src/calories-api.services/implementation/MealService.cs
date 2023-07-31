@@ -84,9 +84,18 @@ public class MealService : IMealService
         return meal is null ? null : _mapper.Map<MealResponse>(meal);
     }
 
-    public Task<double> GetTotalUserCaloriesForToday(Guid userId)
+    public async Task<double> GetTotalUserCaloriesForToday(Guid userId)
     {
-        throw new NotImplementedException();
+        IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
+        IEnumerable<Meal> mealsForToday = meals.Where(meal => meal.DateTime.Date.Equals(DateTime.Today));
+
+        double totalUserCalories = 0;
+
+        foreach (Meal meal in mealsForToday)
+        {
+            totalUserCalories += meal.NumberOfCalories;
+        }
+        return totalUserCalories;
     }
 
     public async Task<bool?> RemoveMeal(Guid id)

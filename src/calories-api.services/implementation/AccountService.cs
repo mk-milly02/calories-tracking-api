@@ -15,12 +15,14 @@ namespace calories_api.services;
 public class AccountService : IAccountService
 {
     private readonly IMapper _mapper;
+    private readonly IMealService _mealService;
     private readonly IAuthenticationConfigurationProvider _authenticationConfigurationProvider;
     private readonly UserManager<User> _userManager;
 
-    public AccountService(IMapper mapper, UserManager<User> userManager, IAuthenticationConfigurationProvider authenticationConfigurationProvider)
+    public AccountService(IMapper mapper, IMealService mealService, UserManager<User> userManager, IAuthenticationConfigurationProvider authenticationConfigurationProvider)
     {
         _mapper = mapper;
+        _mealService = mealService;
         _authenticationConfigurationProvider = authenticationConfigurationProvider;
         _userManager = userManager;
     }
@@ -105,17 +107,19 @@ public class AccountService : IAccountService
         return existingEmail != null && existingUsername != null;
     }
 
-    public async Task<bool?> SetExpectedNumberOfCaloriesPerDay(UserSettings settings)
+    public async Task<bool> SetExpectedNumberOfCaloriesPerDay(UserSettings settings)
     {
         User? user = await _userManager.FindByIdAsync(settings.UserId.ToString());
-        if(user is null) return null;
-        user.ExpectedNumberOfCaloriesPerDay = settings.ExpectedNumberOfCaloriesPerDay;
+        user!.ExpectedNumberOfCaloriesPerDay = settings.ExpectedNumberOfCaloriesPerDay;
         IdentityResult result = await _userManager.UpdateAsync(user);
         return result.Succeeded;
     }
 
-    public Task CheckForCalorieDeficiency(Guid userId)
+    public async Task CheckForCalorieDeficiency(Guid userId)
     {
-        throw new NotImplementedException();
+        User? user = await _userManager.FindByIdAsync(userId.ToString());
+        double totalUserCaloriesForToday = await _mealService.GetTotalUserCaloriesForToday(userId);
+        user!.IsCaloriesDeficient = totalUserCaloriesForToday < user.ExpectedNumberOfCaloriesPerDay;
+        await _userManager.UpdateAsync(user);
     }
 }
