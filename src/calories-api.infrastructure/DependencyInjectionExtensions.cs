@@ -21,6 +21,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IMealRepository, MealRepository>();
         services.AddTransient<IMealService, MealService>();
         services.AddTransient<IAccountService, AccountService>();
+        services.AddTransient<IUserService, UserService>();
     }
 
     public static void RegisterMappingProfile(this IServiceCollection services)
