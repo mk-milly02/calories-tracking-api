@@ -33,6 +33,8 @@ public class MealService : IMealService
 
     public async Task<MealResponse?> EditMeal(Guid id, UpdateMealRequest request)
     {
+        if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
+        
         Meal meal = _mapper.Map<Meal>(request);
         meal.Id = id;
         Meal? updatedMeal = await _repository.Update(meal);

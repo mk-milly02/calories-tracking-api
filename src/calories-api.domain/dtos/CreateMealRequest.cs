@@ -6,8 +6,11 @@ public class CreateMealRequest
 {
     public Guid UserId { get; set; }
 
-    [Required, MaxLength(100)]
+    [Required(ErrorMessage = "Text is required"), MaxLength(100)]
     public string? Text { get; set; }
+
+    [Range(0, 5000)]
     public double NumberOfCalories { get; set; }
+    
     public DateTime DateTime { get; set; } = DateTime.UtcNow;
 }

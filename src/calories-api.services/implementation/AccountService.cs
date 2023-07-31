@@ -104,4 +104,18 @@ public class AccountService : IAccountService
         User? existingUsername = await _userManager.FindByNameAsync(request.Username!);
         return existingEmail != null && existingUsername != null;
     }
+
+    public async Task<bool?> SetExpectedNumberOfCaloriesPerDay(UserSettings settings)
+    {
+        User? user = await _userManager.FindByIdAsync(settings.UserId.ToString());
+        if(user is null) return null;
+        user.ExpectedNumberOfCaloriesPerDay = settings.ExpectedNumberOfCaloriesPerDay;
+        IdentityResult result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
+    }
+
+    public Task CheckForCalorieDeficiency(Guid userId)
+    {
+        throw new NotImplementedException();
+    }
 }
