@@ -1,6 +1,6 @@
 ﻿namespace calories_api.domain;
 
-public class UserResponse
+public class UserRegistrationResponse
 {
     public Guid Id { get; set; }
     public string? UserName { get; set;}

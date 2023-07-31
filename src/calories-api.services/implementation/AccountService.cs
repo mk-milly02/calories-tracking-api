@@ -36,7 +36,7 @@ public class AccountService : IAccountService
         return await _userManager.CheckPasswordAsync(user, saltedPassword) ? await GenerateToken(user) : null;
     }
 
-    public async Task<UserResponse?> Register(UserRegistrationRequest request)
+    public async Task<UserRegistrationResponse?> Register(UserRegistrationRequest request)
     {
         User user = new() { PasswordSalt = GenerateSalt() };
         _mapper.Map(request, user);
@@ -44,7 +44,7 @@ public class AccountService : IAccountService
         string saltedPassword = GenerateSaltedPassword(request.Password!, user.PasswordSalt);
         IdentityResult result = await _userManager.CreateAsync(user, saltedPassword);
         await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
-        return result.Succeeded ? _mapper.Map<UserResponse>(user) : null;
+        return result.Succeeded ? _mapper.Map<UserRegistrationResponse>(user) : null;
     }
 
     private static string GenerateSalt()

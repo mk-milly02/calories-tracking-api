@@ -17,6 +17,6 @@ public class MappingProfile : Profile
 
         CreateMap<UserRegistrationRequest, User>();
 
-        CreateMap<User, UserResponse>();
+        CreateMap<User, UserRegistrationResponse>();
     }
 }
