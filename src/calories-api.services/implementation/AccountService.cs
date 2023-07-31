@@ -100,11 +100,10 @@ public class AccountService : IAccountService
         return new() { Token = new JwtSecurityTokenHandler().WriteToken(securityToken), Expires = securityToken.ValidTo };
     }
 
-    public async Task<bool> IsUsernameOrEmailInUse(UserRegistrationRequest request)
+    public async Task<bool> EmailAlreadyExists(string email)
     {
-        User? existingEmail = await _userManager.FindByEmailAsync(request.Email!);
-        User? existingUsername = await _userManager.FindByNameAsync(request.Username!);
-        return existingEmail != null && existingUsername != null;
+        User? user = await _userManager.FindByEmailAsync(email);
+        return user is not null;
     }
 
     public async Task<bool> SetExpectedNumberOfCaloriesPerDay(UserSettings settings)

@@ -2,19 +2,13 @@
 
 namespace calories_api.domain;
 
-public class UserRegistrationRequest
+public class CreateUserRequest
 {
     [Required(ErrorMessage = "Firstname is required")]
     public string? FirstName { get; set; }
 
     [Required(ErrorMessage = "Lastname is required")]
     public string? LastName { get; set; }
-
-    [Required(ErrorMessage = "Username is required")]
-    public string? Username { get; set; }
-
-    [Required(ErrorMessage = "Password is required")]
-    public string? Password { get; set; }
 
     [Required(ErrorMessage = "Email is required"), EmailAddress(ErrorMessage = "Invalid email address")]
     public string? Email { get; set; }

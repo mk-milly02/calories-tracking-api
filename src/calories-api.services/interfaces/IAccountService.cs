@@ -2,9 +2,8 @@
 
 namespace calories_api.services;
 
-public interface IAccountService
+public interface IAccountService //Regular user logic
 {
-    Task<bool> IsUsernameOrEmailInUse(UserRegistrationRequest request);
     Task<UserRegistrationResponse?> Register(UserRegistrationRequest request);
     Task<AuthenticationResponse?> Authenticate(AuthenticationRequest request);
     Task<bool> SetExpectedNumberOfCaloriesPerDay(UserSettings settings);

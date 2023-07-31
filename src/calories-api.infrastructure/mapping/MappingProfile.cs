@@ -18,5 +18,11 @@ public class MappingProfile : Profile
         CreateMap<UserRegistrationRequest, User>();
 
         CreateMap<User, UserRegistrationResponse>();
+
+        CreateMap<CreateUserRequest, User>();
+
+        CreateMap<User, UserProfile>();
+
+        CreateMap<UpdateUserRequest, User>();
     }
 }
