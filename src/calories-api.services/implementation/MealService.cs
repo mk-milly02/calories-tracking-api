@@ -44,33 +44,49 @@ public class MealService : IMealService
     public async Task<IEnumerable<MealResponse>> GetAllMeals(QueryParameters query)
     {
         List<MealResponse> output = new();
-        IEnumerable<Meal> meals = await _repository.RetrieveAll(query);
+        IEnumerable<Meal> meals = await _repository.RetrieveAll();
+
+        if(!string.IsNullOrEmpty(query.SeachString)) 
+        { 
+            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString)); 
+        }
 
         foreach (Meal meal in meals)
         {
             MealResponse mealResponse = _mapper.Map<MealResponse>(meal);
             output.Add(mealResponse);
         }
-        return output;
+
+        return output.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
     }
 
     public async Task<IEnumerable<MealResponse>> GetAllUserMeals(Guid userId, QueryParameters query)
     {
         List<MealResponse> output = new();
-        IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId, query);
+        IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
+
+        if(!string.IsNullOrEmpty(query.SeachString)) 
+        { 
+            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString)); 
+        }
 
         foreach (Meal meal in meals)
         {
             MealResponse mealResponse = _mapper.Map<MealResponse>(meal);
             output.Add(mealResponse);
         }
-        return output;
+        return output.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
     }
 
     public async Task<MealResponse?> GetMeal(Guid id)
     {
         Meal? meal = await _repository.Retrieve(id);
         return meal is null ? null : _mapper.Map<MealResponse>(meal);
+    }
+
+    public Task<double> GetTotalUserCaloriesForToday(Guid userId)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<bool?> RemoveMeal(Guid id)

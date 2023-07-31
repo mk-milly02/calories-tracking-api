@@ -34,28 +34,14 @@ public class MealRepository : IMealRepository
         return await _context.Meals.AsNoTracking().SingleOrDefaultAsync(meal => meal.Id.Equals(id));
     }
 
-    public async Task<IEnumerable<Meal>> RetrieveAll(QueryParameters query)
+    public async Task<IEnumerable<Meal>> RetrieveAll()
     {
-        IEnumerable<Meal> meals = await _context.Meals.AsNoTracking().ToListAsync();
-
-        if(!string.IsNullOrEmpty(query.SeachString)) 
-        { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString)); 
-        }
-
-        return meals.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
+        return await _context.Meals.AsNoTracking().ToListAsync();
     }
 
-    public async Task<IEnumerable<Meal>> RetrieveAllByUser(Guid userId, QueryParameters query)
+    public async Task<IEnumerable<Meal>> RetrieveAllByUser(Guid userId)
     {
-        IEnumerable<Meal> meals = await _context.Meals.AsNoTracking().Where(meal => meal.Equals(userId)).ToListAsync();
-
-        if(!string.IsNullOrEmpty(query.SeachString)) 
-        { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString)); 
-        }
-
-        return meals.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
+        return await _context.Meals.AsNoTracking().Where(meal => meal.UserId.Equals(userId)).ToListAsync();
     }
 
     public async Task<Meal?> Update(Meal meal)
