@@ -4,6 +4,7 @@ using calories_api.persistence;
 using calories_api.services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +21,7 @@ public static class DependencyInjectionExtensions
 
         services.AddScoped<IMealRepository, MealRepository>();
         services.AddTransient<IMealService, MealService>();
-        services.AddTransient<IAccountService, AccountService>();
+        services.AddTransient<ITokenService, TokenService>();
         services.AddTransient<IUserService, UserService>();
     }
 
@@ -62,6 +63,18 @@ public static class DependencyInjectionExtensions
             {
                 policy.RequireRole(nameof(Roles.RegularUser));
             });
+            
+            options.AddPolicy("MustBeAUserManager", policy =>
+            {
+                policy.RequireRole(nameof(Roles.UserManager));
+            });
+
+            options.AddPolicy("MustBeAnAdministrator", policy => 
+            {
+                policy.RequireRole(nameof(Roles.Administrator));
+            });
+
+            options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
         });
     }
 
