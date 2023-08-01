@@ -54,6 +54,17 @@ public static class DependencyInjectionExtensions
         });
     }
 
+    public static void AddRoleBasedAuthorization(this IServiceCollection services)
+    {
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("MustBeARegularUser", policy => 
+            {
+                policy.RequireRole(nameof(Roles.RegularUser));
+            });
+        });
+    }
+
     public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         string? connectionString = configuration.GetConnectionString("calories-api-default");
