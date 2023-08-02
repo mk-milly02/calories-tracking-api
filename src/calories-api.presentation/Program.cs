@@ -7,8 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.RegisterMappingProfile();
 builder.Services.RegisterServices();
-builder.Services.AddTokenBasedAuthentication((IAuthenticationConfigurationProvider)builder.Configuration.GetRequiredSection("Bearer"));
-builder.Services.AddRoleBasedAuthorization();
+builder.Services.AddTokenBasedAuthentication(builder.Configuration);
+builder.Services.AddPolicyBasedAuthorization();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

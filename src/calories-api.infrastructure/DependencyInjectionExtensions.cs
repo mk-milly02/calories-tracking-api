@@ -2,7 +2,6 @@
 using calories_api.domain;
 using calories_api.persistence;
 using calories_api.services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -30,9 +29,9 @@ public static class DependencyInjectionExtensions
         services.AddAutoMapper(typeof(MappingProfile));
     }
 
-    public static void AddTokenBasedAuthentication(this IServiceCollection services, IAuthenticationConfigurationProvider authenticationConfigurationProvider)
+    public static void AddTokenBasedAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        IConfiguration bearer = authenticationConfigurationProvider.GetSchemeConfiguration(JwtBearerDefaults.AuthenticationScheme)
+        IConfiguration bearer = configuration.GetRequiredSection("Authentication:Schemes:Bearer")
                                 ?? throw new InvalidOperationException("Bearer scheme is not configured");
         
         services.AddAuthentication(options => 
@@ -55,7 +54,7 @@ public static class DependencyInjectionExtensions
         });
     }
 
-    public static void AddRoleBasedAuthorization(this IServiceCollection services)
+    public static void AddPolicyBasedAuthorization(this IServiceCollection services)
     {
         services.AddAuthorization(options =>
         {
@@ -80,10 +79,9 @@ public static class DependencyInjectionExtensions
 
     public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        string? connectionString = configuration.GetConnectionString("calories-api-default");
+        string? connectionString = configuration.GetConnectionString("default");
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
         services.AddIdentity<User, Role>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
-        //Add roles
     }
 }
