@@ -9,8 +9,6 @@ public class CreateMealRequest
     [Required(ErrorMessage = "Text is required"), MaxLength(100)]
     public string? Text { get; set; }
 
-    [Range(0, 5000)]
+    [Range(0, 5000, ErrorMessage = "Must range between 0 and 5000")]
     public double NumberOfCalories { get; set; }
-    
-    public DateTime DateTime { get; set; } = DateTime.UtcNow;
 }

@@ -4,11 +4,11 @@ namespace calories_api.services;
 
 public interface IMealService
 {
-    Task<MealResponse?> AddMeal(CreateMealRequest request);
-    Task<MealResponse?> GetMeal(Guid id);
-    Task<IEnumerable<MealResponse>> GetAllMeals(QueryParameters query);
-    Task<IEnumerable<MealResponse>> GetAllUserMeals(Guid userId, QueryParameters query);
+    Task<MealResponse?> AddMealAsync(CreateMealRequest request);
+    Task<MealResponse?> GetMealByIdAsync(Guid id);
+    Task<IEnumerable<MealResponse>> GetMealsAsync(QueryParameters query);
+    Task<IEnumerable<MealResponse>> GetMealsByUserAsync(Guid userId, QueryParameters query);
     Task<double> GetTotalUserCaloriesForToday(Guid userId);
-    Task<MealResponse?> EditMeal(Guid id, UpdateMealRequest request);
-    Task<bool?> RemoveMeal(Guid id);
+    Task<MealResponse?> UpdateMealAsync(Guid id, UpdateMealRequest request);
+    Task<bool?> RemoveMealAsync(Guid id);
 }

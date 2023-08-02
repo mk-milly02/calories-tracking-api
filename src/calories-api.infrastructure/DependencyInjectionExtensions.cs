@@ -84,5 +84,6 @@ public static class DependencyInjectionExtensions
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
         services.AddIdentity<User, Role>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+        //Add roles
     }
 }
