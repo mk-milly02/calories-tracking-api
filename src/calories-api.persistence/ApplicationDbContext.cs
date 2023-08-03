@@ -22,17 +22,20 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
             new Role
             {
                 Id = Guid.NewGuid(),
-                Name = "RegularUser"
+                Name = domain.Roles.RegularUser.ToString(),
+                NormalizedName = domain.Roles.RegularUser.ToString().ToUpper()
             },
             new Role
             {
                 Id = Guid.NewGuid(),
-                Name = "UserManager"
+                Name = domain.Roles.UserManager.ToString(),
+                NormalizedName = domain.Roles.UserManager.ToString().ToUpper()
             },
             new Role
             {
                 Id = Guid.NewGuid(),
-                Name = "Administrator"
+                Name = domain.Roles.Administrator.ToString(),
+                NormalizedName = domain.Roles.Administrator.ToString().ToUpper()
             }
         );
 
