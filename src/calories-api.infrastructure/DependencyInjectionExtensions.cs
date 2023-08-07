@@ -3,7 +3,6 @@ using calories_api.domain;
 using calories_api.persistence;
 using calories_api.services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -60,20 +59,21 @@ public static class DependencyInjectionExtensions
         {
             options.AddPolicy("MustBeARegularUser", policy => 
             {
+                policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
                 policy.RequireRole(nameof(Roles.RegularUser));
             });
             
             options.AddPolicy("MustBeAUserManager", policy =>
             {
+                policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
                 policy.RequireRole(nameof(Roles.UserManager));
             });
 
             options.AddPolicy("MustBeAnAdministrator", policy => 
             {
+                policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
                 policy.RequireRole(nameof(Roles.Administrator));
             });
-
-            options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
         });
     }
 
@@ -82,6 +82,11 @@ public static class DependencyInjectionExtensions
         string? connectionString = configuration.GetConnectionString("default");
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
-        services.AddIdentity<User, Role>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+        services.AddIdentity<User, Role>(options => 
+        {
+            options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@ ";
+            options.User.RequireUniqueEmail = true;
+            options.Password.RequiredLength = 8;
+        }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
     }
 }

@@ -19,7 +19,8 @@ public class MappingProfile : Profile
 
         CreateMap<User, UserRegistrationResponse>();
 
-        CreateMap<CreateUserRequest, User>();
+        CreateMap<CreateUserRequest, User>()
+            .ForMember(x => x.UserName, options => options.MapFrom<UsernameResolver>());
 
         CreateMap<User, UserProfile>();
 

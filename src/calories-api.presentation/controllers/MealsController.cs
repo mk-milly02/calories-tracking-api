@@ -84,7 +84,7 @@ public class MealsController : ControllerBase
         return meal is null ? BadRequest("Repository failed to update meal") : Ok(meal);
     }
 
-    [HttpPut("{id}")]
+    [HttpDelete("{id}")]
     [Authorize(Policy = "MustBeAnAdministrator")]
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(400)]

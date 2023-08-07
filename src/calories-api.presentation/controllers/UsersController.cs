@@ -36,9 +36,9 @@ public class UsersController : ControllerBase
         return Ok(_userService.GetAllUsers(query));
     }
 
-    [HttpPost("sign-up")]
     [AllowAnonymous]
-    [ProducesResponseType(200, Type = typeof(UserRegistrationResponse))]
+    [HttpPost("sign-up")]
+    [ProducesResponseType(201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> SignUp([FromBody] UserRegistrationRequest request)
     {
@@ -46,11 +46,11 @@ public class UsersController : ControllerBase
         if (await _userService.EmailAlreadyExistsAsync(request.Email!)) return BadRequest("User already exists");
 
         UserRegistrationResponse? user = await _userService.RegisterAsync(request);
-        return user is null ? BadRequest("Repository failed to create user") : Ok(user);
+        return user is null ? BadRequest("Repository failed to create user") : CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
     }
 
-    [HttpPost("sign-in")]
     [AllowAnonymous]
+    [HttpPost("sign-in")]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(200, Type = typeof(AuthenticationResponse))]
@@ -115,7 +115,10 @@ public class UsersController : ControllerBase
         return user is null ? BadRequest("Repository failed to update user") : Ok(user);
     }
 
-    [HttpPut]
+    [HttpPut("settings")]
+    [Authorize(Policy = "MustBeARegularUser")]
+    [Authorize(Policy = "MustBeAUserManager")]
+    [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     public async Task<IActionResult> UpdateUserSettings([FromBody] UserSettings settings)
@@ -125,7 +128,8 @@ public class UsersController : ControllerBase
         return user is null ? BadRequest("Repository failed to update user settings") : Ok(user);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("add-password/{id}")]
+    [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]

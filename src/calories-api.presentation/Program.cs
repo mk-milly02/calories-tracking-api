@@ -6,14 +6,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.RegisterMappingProfile();
-builder.Services.RegisterServices();
 builder.Services.AddTokenBasedAuthentication(builder.Configuration);
 builder.Services.AddPolicyBasedAuthorization();
+builder.Services.RegisterServices();
+
+builder.Services.AddControllers();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(s => {
-s.SwaggerDoc("v1", new OpenApiInfo
+builder.Services.AddSwaggerGen(s => 
+{
+    s.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "calories-tracker-api",
         Version = "v1",
@@ -64,5 +67,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
