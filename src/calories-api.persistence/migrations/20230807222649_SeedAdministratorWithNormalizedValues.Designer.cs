@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using calories_api.persistence;
@@ -11,9 +12,11 @@ using calories_api.persistence;
 namespace calories_api.persistence.migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230807222649_SeedAdministratorWithNormalizedValues")]
+    partial class SeedAdministratorWithNormalizedValues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,8 +111,8 @@ namespace calories_api.persistence.migrations
                     b.HasData(
                         new
                         {
-                            UserId = new Guid("df265af8-8b76-400d-a6e1-0eb0957ff485"),
-                            RoleId = new Guid("42a54c78-9670-4162-9f16-e8a65bd207e1")
+                            UserId = new Guid("137bb656-d24d-4870-baa3-df7f61fca10d"),
+                            RoleId = new Guid("321bde55-9e59-4d65-8453-409b38561c50")
                         });
                 });
 
@@ -185,19 +188,19 @@ namespace calories_api.persistence.migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("ccbf03b7-02b4-478f-a60a-8e688807aad0"),
+                            Id = new Guid("a27e248c-9087-48d0-8623-8c515d1a58f7"),
                             Name = "RegularUser",
                             NormalizedName = "REGULARUSER"
                         },
                         new
                         {
-                            Id = new Guid("76d8f116-27df-4d84-be5d-c35405fadfbc"),
+                            Id = new Guid("83091781-e932-4789-836b-df7e8062762a"),
                             Name = "UserManager",
                             NormalizedName = "USERMANAGER"
                         },
                         new
                         {
-                            Id = new Guid("42a54c78-9670-4162-9f16-e8a65bd207e1"),
+                            Id = new Guid("321bde55-9e59-4d65-8453-409b38561c50"),
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -285,9 +288,9 @@ namespace calories_api.persistence.migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("df265af8-8b76-400d-a6e1-0eb0957ff485"),
+                            Id = new Guid("137bb656-d24d-4870-baa3-df7f61fca10d"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "99cc62ef-2a19-4fee-925e-c41c2a31494c",
+                            ConcurrencyStamp = "28547d5f-8ff5-46d7-8914-e275503987b0",
                             Email = "admin@calories-tracker.com",
                             EmailConfirmed = false,
                             ExpectedNumberOfCaloriesPerDay = 0.0,
@@ -296,12 +299,12 @@ namespace calories_api.persistence.migrations
                             LastName = "Ababio",
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@CALORIES-TRACKER.COM",
-                            NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFlD60z5FnXiAYxL7jCCp9/klOXTsxciYIhCXq3RfTnUMQpByXfCWVRwQ86eNf7DjA==",
-                            PasswordSalt = "gPCpf6CWIyGuaEnuQSUr7SJeOYUjzaR0u4LH0y3dP7M=",
+                            NormalizedUserName = "ADMIN@CALORIES-TRACKER.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOe2UPO6Nsz4P6sOZGBnzagNojoM1JEajqrPtqDw3fO4xiF0Jcp1D1QBGQi/wGZs0A==",
+                            PasswordSalt = "cVHjvZ/GHMfAwzKA8HGET4rRvKzmMOM8E0W1BxkuiNU=",
                             PhoneNumberConfirmed = false,
                             TwoFactorEnabled = false,
-                            UserName = "admin"
+                            UserName = "admin@calories-tracker.com"
                         });
                 });
 

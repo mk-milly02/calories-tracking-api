@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using AutoMapper;
+﻿using AutoMapper;
 using calories_api.domain;
 using Microsoft.AspNetCore.Identity;
 
@@ -81,16 +79,16 @@ public class UserService : IUserService
         User? user = await _userManager.FindByEmailAsync(request.Email!);
 
         if(user is null) { return null; }
-        string saltedPassword = GenerateSaltedPassword(request.Password!, user.PasswordSalt!);
+        string saltedPassword = Security.GenerateSaltedPassword(request.Password!, user.PasswordSalt!);
         return await _userManager.CheckPasswordAsync(user, saltedPassword) ? await _tokenService.GenerateTokenAsync(user) : null;
     }
 
     public async Task<UserRegistrationResponse?> RegisterAsync(UserRegistrationRequest request)
     {
-        User user = new() { PasswordSalt = GenerateSalt() };
+        User user = new() { PasswordSalt = Security.GenerateSalt() };
         _mapper.Map(request, user);
 
-        string saltedPassword = GenerateSaltedPassword(request.Password!, user.PasswordSalt);
+        string saltedPassword = Security.GenerateSaltedPassword(request.Password!, user.PasswordSalt);
         IdentityResult result = await _userManager.CreateAsync(user, saltedPassword);
         await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
         return result.Succeeded ? _mapper.Map<UserRegistrationResponse>(user) : null;
@@ -100,26 +98,6 @@ public class UserService : IUserService
     {
         User? user = await _userManager.FindByEmailAsync(email);
         return user is not null;
-    }
-
-    private static string GenerateSalt()
-    {
-        //"using" ensures that RNG is well disposed
-        using RandomNumberGenerator generator = RandomNumberGenerator.Create();
-        byte[] randomNumberBytes = new byte[32];
-        generator.GetBytes(randomNumberBytes);
-        return Convert.ToBase64String(randomNumberBytes);
-    }
-
-    private static string GenerateSaltedPassword(string password, string salt)
-    {
-        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-        byte[] saltBytes = Encoding.UTF8.GetBytes(salt);
-        byte[] saltedPasswordBytes = new byte[saltBytes.Length + passwordBytes.Length];
-
-        Buffer.BlockCopy(passwordBytes, 0, saltedPasswordBytes, 0, passwordBytes.Length);
-        Buffer.BlockCopy(saltBytes, 0, saltedPasswordBytes, passwordBytes.Length, saltBytes.Length);
-        return Convert.ToBase64String(saltedPasswordBytes);
     }
 
     public async Task<UserProfile?> CreateRegularUserAsync(CreateUserRequest request)
@@ -152,8 +130,8 @@ public class UserService : IUserService
 
         if (user is null) return null;
 
-        user.PasswordSalt = GenerateSalt();
-        string saltedPassword = GenerateSaltedPassword(request.Password!, user.PasswordSalt);
+        user.PasswordSalt = Security.GenerateSalt();
+        string saltedPassword = Security.GenerateSaltedPassword(request.Password!, user.PasswordSalt);
         IdentityResult created = await _userManager.AddPasswordAsync(user, saltedPassword);
         return created.Succeeded;
     }
