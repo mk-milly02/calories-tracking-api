@@ -3,6 +3,7 @@ using calories_api.domain;
 using calories_api.persistence;
 using calories_api.services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -88,5 +89,30 @@ public static class DependencyInjectionExtensions
             options.User.RequireUniqueEmail = true;
             options.Password.RequiredLength = 8;
         }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+    }
+
+    public static async void SeedAdministrator(this IApplicationBuilder application)
+    {
+        using IServiceScope services = application.ApplicationServices.CreateScope();
+
+        IConfiguration configuration = services.ServiceProvider.GetRequiredService<IConfiguration>();
+        UserManager<User> userManager = services.ServiceProvider.GetRequiredService<UserManager<User>>();
+
+        if (await userManager.FindByNameAsync("admin") is not null) return;
+
+        // Create the administrator identity
+        User administrator = configuration.GetSection("Administrator").Get<User>()
+                             ?? throw new NullReferenceException("Administrator details not provided");
+                             
+        string password = configuration["Administrator:Password"]
+                          ?? throw new NullReferenceException("Administrator password not provided");
+
+        PasswordHasher<User> hasher = new();
+        string passwordSalt = Security.GenerateSalt();
+        string saltedPassword = Security.GenerateSaltedPassword(password, passwordSalt);
+        administrator.PasswordHash = hasher.HashPassword(administrator, saltedPassword);
+
+        await userManager.CreateAsync(administrator);
+        await userManager.AddToRoleAsync(administrator, nameof(Roles.Administrator));
     }
 }
