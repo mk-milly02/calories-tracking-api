@@ -24,11 +24,6 @@ public static class DependencyInjectionExtensions
         services.AddTransient<IUserService, UserService>();
     }
 
-    public static void RegisterMappingProfile(this IServiceCollection services)
-    {
-        services.AddAutoMapper(typeof(MappingProfile));
-    }
-
     public static void AddTokenBasedAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         IConfiguration bearer = configuration.GetRequiredSection("Authentication:Schemes:Bearer")
@@ -110,6 +105,7 @@ public static class DependencyInjectionExtensions
         PasswordHasher<User> hasher = new();
         string passwordSalt = Security.GenerateSalt();
         string saltedPassword = Security.GenerateSaltedPassword(password, passwordSalt);
+        administrator.PasswordSalt = passwordSalt;
         administrator.PasswordHash = hasher.HashPassword(administrator, saltedPassword);
 
         await userManager.CreateAsync(administrator);

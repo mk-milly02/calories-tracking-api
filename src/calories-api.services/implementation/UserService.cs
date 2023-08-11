@@ -1,19 +1,16 @@
-﻿using AutoMapper;
-using calories_api.domain;
+﻿using calories_api.domain;
 using Microsoft.AspNetCore.Identity;
 
 namespace calories_api.services;
 
 public class UserService : IUserService
 {
-    private readonly IMapper _mapper;
     private readonly IMealService _mealService;
     private readonly UserManager<User> _userManager;
     private readonly ITokenService _tokenService;
 
-    public UserService(IMapper mapper, IMealService mealService, UserManager<User> userManager, ITokenService tokenService)
+    public UserService(IMealService mealService, UserManager<User> userManager, ITokenService tokenService)
     {
-        _mapper = mapper;
         _mealService = mealService;
         _userManager = userManager;
         _tokenService = tokenService;
@@ -34,8 +31,7 @@ public class UserService : IUserService
 
         foreach (User user in users)
         {
-            UserProfile userProfile = _mapper.Map<UserProfile>(user);
-            profiles.Add(userProfile);
+            profiles.Add(user.ToUserProfile());
         }
 
         return profiles.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
@@ -44,7 +40,7 @@ public class UserService : IUserService
     public async Task<UserProfile?> GetUserByIdAsync(Guid userId)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
-        return user is null ? null : _mapper.Map<UserProfile>(user);
+        return user is null ? null : user.ToUserProfile();
     }
 
     public async Task<UserProfile?> UpdateUserAsync(Guid userId, UpdateUserRequest request)
@@ -53,9 +49,9 @@ public class UserService : IUserService
 
         if (user is null) return null;
 
-        user = _mapper.Map<User>(request);
+        user = request.ToUser();
         IdentityResult result = await _userManager.UpdateAsync(user);
-        return result.Succeeded ? _mapper.Map<UserProfile>(user) : null;
+        return result.Succeeded ? user.ToUserProfile() : null;
     }
 
     public async Task<UserProfile?> UpdateUserSettingsAsync(UserSettings settings)
@@ -63,7 +59,7 @@ public class UserService : IUserService
         User? user = await _userManager.FindByIdAsync(settings.UserId.ToString());
         user!.ExpectedNumberOfCaloriesPerDay = settings.ExpectedNumberOfCaloriesPerDay;
         IdentityResult result = await _userManager.UpdateAsync(user);
-        return result.Succeeded ? _mapper.Map<UserProfile>(user) : null;
+        return result.Succeeded ? user.ToUserProfile() : null;
     }
 
     public async Task CheckForCalorieDeficiencyAsync(Guid userId)
@@ -85,13 +81,13 @@ public class UserService : IUserService
 
     public async Task<UserRegistrationResponse?> RegisterAsync(UserRegistrationRequest request)
     {
-        User user = new() { PasswordSalt = Security.GenerateSalt() };
-        _mapper.Map(request, user);
+        User user = request.ToUser();
+        user.PasswordSalt = Security.GenerateSalt();
 
         string saltedPassword = Security.GenerateSaltedPassword(request.Password!, user.PasswordSalt);
         IdentityResult result = await _userManager.CreateAsync(user, saltedPassword);
         await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
-        return result.Succeeded ? _mapper.Map<UserRegistrationResponse>(user) : null;
+        return result.Succeeded ? user.ToUserRegistrationResponse() : null;
     }
 
     public async Task<bool> EmailAlreadyExistsAsync(string email)
@@ -102,26 +98,26 @@ public class UserService : IUserService
 
     public async Task<UserProfile?> CreateRegularUserAsync(CreateUserRequest request)
     {
-        User user = _mapper.Map<User>(request);
+        User user = request.ToUser();
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
-        return result.Succeeded ? _mapper.Map<UserProfile>(user) : null;
+        return result.Succeeded ? user.ToUserProfile() : null;
     }
 
     public async Task<UserProfile?> CreateUserManagerAsync(CreateUserRequest request)
     {
-        User user = _mapper.Map<User>(request);
+        User user = request.ToUser();
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.UserManager.ToString());
-        return result.Succeeded ? _mapper.Map<UserProfile>(user) : null;
+        return result.Succeeded ? user.ToUserProfile() : null;
     }
 
     public async Task<UserProfile?> CreateAdministratorAsync(CreateUserRequest request)
     {
-        User user = _mapper.Map<User>(request);
+        User user = request.ToUser();
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.Administrator.ToString());
-        return result.Succeeded ? _mapper.Map<UserProfile>(user) : null;
+        return result.Succeeded ? user.ToUserProfile() : null;
     }
 
     public async Task<bool?> CreatePasswordAsync(Guid userId, CreatePasswordRequest request)

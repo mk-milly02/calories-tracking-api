@@ -9,4 +9,13 @@ public class UpdateMealRequest
 
     [Range(0, 5000, ErrorMessage = "Must be between 0 and 5000")]
     public double NumberOfCalories { get; set; }
+
+    public Meal ToMeal()
+    {
+        return new()
+        {
+            Text = Text,
+            NumberOfCalories = NumberOfCalories
+        };
+    }
 }

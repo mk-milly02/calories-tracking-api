@@ -2,7 +2,7 @@
 
 public class MealResponse
 {
-    public Guid EntryId { get; set; }
+    public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string? Text { get; set; }
     public double NumberOfCalories { get; set; }

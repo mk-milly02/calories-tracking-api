@@ -12,4 +12,15 @@ public class CreateUserRequest
 
     [Required(ErrorMessage = "Email is required"), EmailAddress(ErrorMessage = "Invalid email address")]
     public string? Email { get; set; }
+
+    public User ToUser()
+    {
+        return new()
+        {
+            FirstName = FirstName,
+            LastName = LastName,
+            Email = Email,
+            UserName = $"{FirstName!.ToLower()}.{LastName!.ToLower()}"
+        };
+    }
 }

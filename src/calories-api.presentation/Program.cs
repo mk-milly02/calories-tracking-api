@@ -5,7 +5,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDatabase(builder.Configuration);
-builder.Services.RegisterMappingProfile();
 builder.Services.AddTokenBasedAuthentication(builder.Configuration);
 builder.Services.AddPolicyBasedAuthorization();
 builder.Services.RegisterServices();

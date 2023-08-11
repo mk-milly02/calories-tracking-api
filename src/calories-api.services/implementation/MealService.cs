@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Json;
-using AutoMapper;
 using calories_api.domain;
 using calories_api.persistence;
 using Microsoft.Extensions.Configuration;
@@ -12,33 +11,31 @@ public class MealService : IMealService
     private readonly IMealRepository _repository;
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
-    private readonly IMapper _mapper;
 
-    public MealService(IMealRepository repository, HttpClient httpClient, IConfiguration configuration, IMapper mapper)
+    public MealService(IMealRepository repository, HttpClient httpClient, IConfiguration configuration)
     {
         _repository = repository;
         _httpClient = httpClient;
         _configuration = configuration;
-        _mapper = mapper;
     }
     
     public async Task<MealResponse?> AddMealAsync(CreateMealRequest request)
     {
         if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
 
-        Meal meal = _mapper.Map<Meal>(request);
+        Meal meal = request.ToMeal();
         Meal? addedMeal = await _repository.Create(meal);
-        return addedMeal is null ? null : _mapper.Map<MealResponse>(addedMeal);
+        return addedMeal is null ? null : addedMeal.ToMealResponse();
     }
 
     public async Task<MealResponse?> UpdateMealAsync(Guid id, UpdateMealRequest request)
     {
         if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
         
-        Meal meal = _mapper.Map<Meal>(request);
+        Meal meal = request.ToMeal();
         meal.Id = id;
         Meal? updatedMeal = await _repository.Update(meal);
-        return updatedMeal is null ? null : _mapper.Map<MealResponse>(updatedMeal);
+        return updatedMeal is null ? null : updatedMeal.ToMealResponse();
     }
 
     public async Task<IEnumerable<MealResponse>> GetMealsAsync(QueryParameters query)
@@ -53,8 +50,7 @@ public class MealService : IMealService
 
         foreach (Meal meal in meals)
         {
-            MealResponse mealResponse = _mapper.Map<MealResponse>(meal);
-            output.Add(mealResponse);
+            output.Add(meal.ToMealResponse());
         }
 
         return output.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
@@ -72,8 +68,7 @@ public class MealService : IMealService
 
         foreach (Meal meal in meals)
         {
-            MealResponse mealResponse = _mapper.Map<MealResponse>(meal);
-            output.Add(mealResponse);
+            output.Add(meal.ToMealResponse());
         }
         return output.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
     }
@@ -81,7 +76,7 @@ public class MealService : IMealService
     public async Task<MealResponse?> GetMealByIdAsync(Guid id)
     {
         Meal? meal = await _repository.Retrieve(id);
-        return meal is null ? null : _mapper.Map<MealResponse>(meal);
+        return meal is null ? null : meal.ToMealResponse();
     }
 
     public async Task<double> GetTotalUserCaloriesForToday(Guid userId)
