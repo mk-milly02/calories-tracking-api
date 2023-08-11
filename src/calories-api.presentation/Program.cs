@@ -1,4 +1,4 @@
-using calories_api.infrastructure;
+using calories_api.services;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);

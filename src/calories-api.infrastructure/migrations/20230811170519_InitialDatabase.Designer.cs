@@ -5,22 +5,22 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using calories_api.persistence;
+using calories_api.infrastructure;
 
 #nullable disable
 
-namespace calories_api.persistence.migrations
+namespace calories_api.infrastructure.migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230807213037_SeedAdministrator")]
-    partial class SeedAdministrator
+    [Migration("20230811170519_InitialDatabase")]
+    partial class InitialDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.9")
+                .HasAnnotation("ProductVersion", "7.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -107,13 +107,6 @@ namespace calories_api.persistence.migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = new Guid("2d6b5682-87fb-4397-bb62-9b92aab97a8f"),
-                            RoleId = new Guid("103fe125-b44a-45d4-821d-5a573b634bd9")
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -188,19 +181,19 @@ namespace calories_api.persistence.migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("66fd83bc-4f01-4ef5-b0ad-104057fa3e1a"),
+                            Id = new Guid("cb5e0537-7d8d-4d06-90e2-013338d4645c"),
                             Name = "RegularUser",
                             NormalizedName = "REGULARUSER"
                         },
                         new
                         {
-                            Id = new Guid("f8f5eab9-78d7-48bc-9a73-31ca772d9beb"),
+                            Id = new Guid("ab93c71a-8d2e-40bb-9539-e4633e387f41"),
                             Name = "UserManager",
                             NormalizedName = "USERMANAGER"
                         },
                         new
                         {
-                            Id = new Guid("103fe125-b44a-45d4-821d-5a573b634bd9"),
+                            Id = new Guid("c729cf1b-380d-486b-9fbe-00628aaa6fe6"),
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -284,26 +277,6 @@ namespace calories_api.persistence.migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("2d6b5682-87fb-4397-bb62-9b92aab97a8f"),
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "4f9cb62f-241f-46da-8cba-00d0de7e7ffa",
-                            Email = "admin@calories-tracker.com",
-                            EmailConfirmed = false,
-                            ExpectedNumberOfCaloriesPerDay = 0.0,
-                            FirstName = "Jonas",
-                            IsCaloriesDeficient = false,
-                            LastName = "Ababio",
-                            LockoutEnabled = false,
-                            PasswordHash = "AQAAAAIAAYagAAAAEDq2lCAr+Y1NRaerv3ZlnKXaop7c4MDdJ3OojDVD7zJP84NChAwowikVnQrQcYflcQ==",
-                            PasswordSalt = "nSSNzksphtU/5PuGApmYfEuX6+REaX3Cz0FoQZ0zZrg=",
-                            PhoneNumberConfirmed = false,
-                            TwoFactorEnabled = false,
-                            UserName = "admin@calories-tracker.com"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

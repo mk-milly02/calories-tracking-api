@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using calories_api.persistence;
+using calories_api.infrastructure;
 
 #nullable disable
 
-namespace calories_api.persistence.migrations
+namespace calories_api.infrastructure.migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -17,7 +17,7 @@ namespace calories_api.persistence.migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.9")
+                .HasAnnotation("ProductVersion", "7.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -131,7 +131,7 @@ namespace calories_api.persistence.migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DateTime")
+                    b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<double>("NumberOfCalories")
@@ -178,19 +178,19 @@ namespace calories_api.persistence.migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("86ddb818-cb2c-4a6f-b777-6795487e7266"),
+                            Id = new Guid("585c059a-6891-458c-9dae-e54dd84a7b0a"),
                             Name = "RegularUser",
                             NormalizedName = "REGULARUSER"
                         },
                         new
                         {
-                            Id = new Guid("1d402d40-c923-4632-a835-3bec106a294c"),
+                            Id = new Guid("1be4d2b1-6757-42f5-bbf2-a75149278703"),
                             Name = "UserManager",
                             NormalizedName = "USERMANAGER"
                         },
                         new
                         {
-                            Id = new Guid("05d8587b-96ae-4489-9bd7-8c38a5e8b357"),
+                            Id = new Guid("9ca8b249-6a2e-47f4-977c-794886bb6614"),
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });

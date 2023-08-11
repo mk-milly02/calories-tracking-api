@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Json;
 using calories_api.domain;
-using calories_api.persistence;
+using calories_api.infrastructure;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
@@ -82,7 +82,7 @@ public class MealService : IMealService
     public async Task<double> GetTotalUserCaloriesForToday(Guid userId)
     {
         IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
-        IEnumerable<Meal> mealsForToday = meals.Where(meal => meal.DateTime.Date.Equals(DateTime.Today));
+        IEnumerable<Meal> mealsForToday = meals.Where(meal => meal.Created.Date.Equals(DateTime.Today));
 
         double totalUserCalories = 0;
 

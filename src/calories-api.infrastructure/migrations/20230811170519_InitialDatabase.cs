@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace calories_api.persistence.migrations
+namespace calories_api.infrastructure.migrations
 {
     /// <inheritdoc />
     public partial class InitialDatabase : Migration
@@ -190,9 +190,9 @@ namespace calories_api.persistence.migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { new Guid("3f374717-f05d-4d88-a5e8-e7010eec8e59"), null, "UserManager", null },
-                    { new Guid("9422d0bc-3829-4cf7-92c9-6e4a5a38ccb2"), null, "Administrator", null },
-                    { new Guid("b679fa86-342f-4aa8-83ea-81ab9b514530"), null, "RegularUser", null }
+                    { new Guid("ab93c71a-8d2e-40bb-9539-e4633e387f41"), null, "UserManager", "USERMANAGER" },
+                    { new Guid("c729cf1b-380d-486b-9fbe-00628aaa6fe6"), null, "Administrator", "ADMINISTRATOR" },
+                    { new Guid("cb5e0537-7d8d-4d06-90e2-013338d4645c"), null, "RegularUser", "REGULARUSER" }
                 });
 
             migrationBuilder.CreateIndex(

@@ -1,10 +1,8 @@
 ﻿using calories_api.domain;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
-namespace calories_api.persistence;
+namespace calories_api.infrastructure;
 
 public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
 {

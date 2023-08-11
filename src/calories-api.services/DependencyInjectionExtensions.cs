@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using calories_api.domain;
-using calories_api.persistence;
-using calories_api.services;
+using calories_api.infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -10,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
-namespace calories_api.infrastructure;
+namespace calories_api.services;
 
 public static class DependencyInjectionExtensions
 {

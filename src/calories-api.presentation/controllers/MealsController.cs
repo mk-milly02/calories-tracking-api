@@ -69,7 +69,7 @@ public class MealsController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         MealResponse? meal = await _mealService.AddMealAsync(request);
-        return meal is null ? BadRequest("Repository failed to add meal") : CreatedAtAction(nameof(GetMeal), new { id = meal.EntryId }, meal);
+        return meal is null ? BadRequest("Repository failed to add meal") : CreatedAtAction(nameof(GetMeal), new { id = meal.Id }, meal);
     }
 
     [HttpPut("{id}")]

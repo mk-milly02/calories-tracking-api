@@ -1,6 +1,6 @@
 ﻿using calories_api.domain;
 
-namespace calories_api.persistence;
+namespace calories_api.infrastructure;
 
 public interface IMealRepository
 {

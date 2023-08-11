@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace calories_api.persistence;
+namespace calories_api.infrastructure;
 
 public class MealRepository : IMealRepository
 {

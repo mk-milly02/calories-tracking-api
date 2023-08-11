@@ -6,7 +6,7 @@ public class Meal
     public Guid UserId { get; set; }
     public string? Text { get; set; }
     public double NumberOfCalories { get; set; }
-    public DateTime DateTime { get; set; } = DateTime.UtcNow;
+    public DateTime Created { get; set; } = DateTime.UtcNow;
 
     public MealResponse ToMealResponse()
     {
@@ -16,8 +16,8 @@ public class Meal
             UserId = UserId,
             Text = Text,
             NumberOfCalories = NumberOfCalories,
-            CreatedOn = DateOnly.FromDateTime(DateTime),
-            CreatedAt = TimeOnly.FromDateTime(DateTime)
+            CreatedOn = DateOnly.FromDateTime(Created),
+            CreatedAt = TimeOnly.FromDateTime(Created)
         };
     }
 }
