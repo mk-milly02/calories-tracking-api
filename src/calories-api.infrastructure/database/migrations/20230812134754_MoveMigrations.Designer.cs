@@ -9,11 +9,11 @@ using calories_api.infrastructure;
 
 #nullable disable
 
-namespace calories_api.infrastructure.migrations
+namespace calories_api.infrastructure.database.migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230811170519_InitialDatabase")]
-    partial class InitialDatabase
+    [Migration("20230812134754_MoveMigrations")]
+    partial class MoveMigrations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -134,7 +134,7 @@ namespace calories_api.infrastructure.migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DateTime")
+                    b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<double>("NumberOfCalories")
@@ -181,19 +181,19 @@ namespace calories_api.infrastructure.migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("cb5e0537-7d8d-4d06-90e2-013338d4645c"),
+                            Id = new Guid("76ffff3f-0ab6-4f30-a629-428fbae66e43"),
                             Name = "RegularUser",
                             NormalizedName = "REGULARUSER"
                         },
                         new
                         {
-                            Id = new Guid("ab93c71a-8d2e-40bb-9539-e4633e387f41"),
+                            Id = new Guid("b3f03d96-fb0b-47ae-8c73-00d814a7d547"),
                             Name = "UserManager",
                             NormalizedName = "USERMANAGER"
                         },
                         new
                         {
-                            Id = new Guid("c729cf1b-380d-486b-9fbe-00628aaa6fe6"),
+                            Id = new Guid("6c30596c-999e-49b4-9cad-c35cdb6eef74"),
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });

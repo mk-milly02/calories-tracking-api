@@ -6,10 +6,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace calories_api.infrastructure.migrations
+namespace calories_api.infrastructure.database.migrations
 {
     /// <inheritdoc />
-    public partial class InitialDatabase : Migration
+    public partial class MoveMigrations : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -172,7 +172,7 @@ namespace calories_api.infrastructure.migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Text = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     NumberOfCalories = table.Column<double>(type: "double precision", nullable: false),
-                    DateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -190,9 +190,9 @@ namespace calories_api.infrastructure.migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { new Guid("ab93c71a-8d2e-40bb-9539-e4633e387f41"), null, "UserManager", "USERMANAGER" },
-                    { new Guid("c729cf1b-380d-486b-9fbe-00628aaa6fe6"), null, "Administrator", "ADMINISTRATOR" },
-                    { new Guid("cb5e0537-7d8d-4d06-90e2-013338d4645c"), null, "RegularUser", "REGULARUSER" }
+                    { new Guid("6c30596c-999e-49b4-9cad-c35cdb6eef74"), null, "Administrator", "ADMINISTRATOR" },
+                    { new Guid("76ffff3f-0ab6-4f30-a629-428fbae66e43"), null, "RegularUser", "REGULARUSER" },
+                    { new Guid("b3f03d96-fb0b-47ae-8c73-00d814a7d547"), null, "UserManager", "USERMANAGER" }
                 });
 
             migrationBuilder.CreateIndex(

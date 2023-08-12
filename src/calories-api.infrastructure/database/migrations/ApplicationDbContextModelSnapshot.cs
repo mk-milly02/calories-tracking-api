@@ -8,7 +8,7 @@ using calories_api.infrastructure;
 
 #nullable disable
 
-namespace calories_api.infrastructure.migrations
+namespace calories_api.infrastructure.database.migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -178,19 +178,19 @@ namespace calories_api.infrastructure.migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("585c059a-6891-458c-9dae-e54dd84a7b0a"),
+                            Id = new Guid("76ffff3f-0ab6-4f30-a629-428fbae66e43"),
                             Name = "RegularUser",
                             NormalizedName = "REGULARUSER"
                         },
                         new
                         {
-                            Id = new Guid("1be4d2b1-6757-42f5-bbf2-a75149278703"),
+                            Id = new Guid("b3f03d96-fb0b-47ae-8c73-00d814a7d547"),
                             Name = "UserManager",
                             NormalizedName = "USERMANAGER"
                         },
                         new
                         {
-                            Id = new Guid("9ca8b249-6a2e-47f4-977c-794886bb6614"),
+                            Id = new Guid("6c30596c-999e-49b4-9cad-c35cdb6eef74"),
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });

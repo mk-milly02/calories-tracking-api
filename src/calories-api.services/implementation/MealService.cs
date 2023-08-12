@@ -25,7 +25,7 @@ public class MealService : IMealService
 
         Meal meal = request.ToMeal();
         Meal? addedMeal = await _repository.Create(meal);
-        return addedMeal is null ? null : addedMeal.ToMealResponse();
+        return addedMeal?.ToMealResponse();
     }
 
     public async Task<MealResponse?> UpdateMealAsync(Guid id, UpdateMealRequest request)
@@ -35,7 +35,7 @@ public class MealService : IMealService
         Meal meal = request.ToMeal();
         meal.Id = id;
         Meal? updatedMeal = await _repository.Update(meal);
-        return updatedMeal is null ? null : updatedMeal.ToMealResponse();
+        return updatedMeal?.ToMealResponse();
     }
 
     public async Task<IEnumerable<MealResponse>> GetMealsAsync(QueryParameters query)
@@ -76,7 +76,7 @@ public class MealService : IMealService
     public async Task<MealResponse?> GetMealByIdAsync(Guid id)
     {
         Meal? meal = await _repository.Retrieve(id);
-        return meal is null ? null : meal.ToMealResponse();
+        return meal?.ToMealResponse();
     }
 
     public async Task<double> GetTotalUserCaloriesForToday(Guid userId)
@@ -106,7 +106,7 @@ public class MealService : IMealService
         HttpRequestMessage message = new()
         {
             Method = HttpMethod.Post,
-            RequestUri = new Uri($" https://trackapi.nutritionix.com/v2/natural/nutrients"),
+            RequestUri = new Uri($"https://trackapi.nutritionix.com/v2/natural/nutrients"),
             Headers =
             {
                 { "x-app-id", appId },

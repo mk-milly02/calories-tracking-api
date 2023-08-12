@@ -85,29 +85,66 @@ public static class DependencyInjectionExtensions
         }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
     }
 
-    public static async void SeedAdministrator(this IApplicationBuilder application)
+    public static async void SeedIdentityUsers(this IApplicationBuilder application)
     {
         using IServiceScope services = application.ApplicationServices.CreateScope();
 
         IConfiguration configuration = services.ServiceProvider.GetRequiredService<IConfiguration>();
         UserManager<User> userManager = services.ServiceProvider.GetRequiredService<UserManager<User>>();
-
-        if (await userManager.FindByNameAsync("admin") is not null) return;
-
-        // Create the administrator identity
-        User administrator = configuration.GetSection("Administrator").Get<User>()
-                             ?? throw new NullReferenceException("Administrator details not provided");
-                             
-        string password = configuration["Administrator:Password"]
-                          ?? throw new NullReferenceException("Administrator password not provided");
-
         PasswordHasher<User> hasher = new();
-        string passwordSalt = Security.GenerateSalt();
-        string saltedPassword = Security.GenerateSaltedPassword(password, passwordSalt);
-        administrator.PasswordSalt = passwordSalt;
-        administrator.PasswordHash = hasher.HashPassword(administrator, saltedPassword);
 
-        await userManager.CreateAsync(administrator);
-        await userManager.AddToRoleAsync(administrator, nameof(Roles.Administrator));
+        if (await userManager.FindByNameAsync("admin") is null)
+        {
+            // Create the administrator identity
+            User administrator = configuration.GetSection("Identity:Administrator").Get<User>()
+                                 ?? throw new NullReferenceException("Administrator details not provided");
+
+            string password = configuration["Identity:Administrator:Password"]
+                              ?? throw new NullReferenceException("Administrator password not provided");
+
+            string passwordSalt = Security.GenerateSalt();
+            string saltedPassword = Security.GenerateSaltedPassword(password, passwordSalt);
+            administrator.PasswordSalt = passwordSalt;
+            administrator.PasswordHash = hasher.HashPassword(administrator, saltedPassword);
+
+            await userManager.CreateAsync(administrator);
+            await userManager.AddToRoleAsync(administrator, nameof(Roles.Administrator));
+        }
+
+        if (await userManager.FindByNameAsync("mj.scott") is null)
+        {
+            // Create the user manager identity
+            User manager = configuration.GetSection("Identity:UserManager").Get<User>()
+                                 ?? throw new NullReferenceException("User manager's details not provided");
+
+            string mpassword = configuration["Identity:UserManager:Password"]
+                              ?? throw new NullReferenceException("User manager's password not provided");
+
+            string mpasswordSalt = Security.GenerateSalt();
+            string msaltedPassword = Security.GenerateSaltedPassword(mpassword, mpasswordSalt);
+            manager.PasswordSalt = mpasswordSalt;
+            manager.PasswordHash = hasher.HashPassword(manager, msaltedPassword);
+
+            await userManager.CreateAsync(manager);
+            await userManager.AddToRoleAsync(manager, nameof(Roles.UserManager));
+        }
+
+        if (await userManager.FindByNameAsync("julius.pepperwood") is null)
+        {
+            // Create the regular user identity
+            User user = configuration.GetSection("Identity:RegularUser").Get<User>()
+                                 ?? throw new NullReferenceException("Regular user's details not provided");
+
+            string upassword = configuration["Identity:RegularUser:Password"]
+                              ?? throw new NullReferenceException("Regular user's password not provided");
+
+            string upasswordSalt = Security.GenerateSalt();
+            string usaltedPassword = Security.GenerateSaltedPassword(upassword, upasswordSalt);
+            user.PasswordSalt = upasswordSalt;
+            user.PasswordHash = hasher.HashPassword(user, usaltedPassword);
+
+            await userManager.CreateAsync(user);
+            await userManager.AddToRoleAsync(user, nameof(Roles.RegularUser));
+        }
     }
 }

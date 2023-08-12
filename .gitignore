@@ -399,3 +399,4 @@ FodyWeavers.xsd
 
 # Custom
 assignment.md
+src/calories-api.tests/testsettings.json

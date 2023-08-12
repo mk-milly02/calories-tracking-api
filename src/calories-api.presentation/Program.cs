@@ -67,6 +67,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-app.SeedAdministrator();
+app.SeedIdentityUsers();
 
 app.Run();
