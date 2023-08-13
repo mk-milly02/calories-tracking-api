@@ -53,11 +53,9 @@ public class MealServiceTests
         };
         MealResponse expected = meal.ToMealResponse();
 
-        _mealRepositoryMock.Setup(m => m.Create(It.IsAny<Meal>())).Callback<Meal>(x =>
-        {
-            meal.Created = x.Created;
-            _meals.Add(meal);
-        }).ReturnsAsync(meal);
+        _mealRepositoryMock.Setup(m => m.Create(It.IsAny<Meal>()))
+                           .Callback<Meal>(x => { meal.Created = x.Created; _meals.Add(meal); })
+                           .ReturnsAsync(meal);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
 
         // When
@@ -76,15 +74,68 @@ public class MealServiceTests
 
     #region UpdateMealAsyncTests
 
-    //when number of calories is provided and database fails to update meal, it should return null
+    [Fact]
+    public async void UpdateMealAsync_WhenRepositoryFailsToUpdateMeal_ReturnNull()
+    {
+        // Given
+        Meal? meal = null;
+        UpdateMealRequest request = new()
+        {
+            Text = "Waakye with fish",
+            NumberOfCalories = 233
+        };
+        
+        _mealRepositoryMock.Setup(m => m.Update(It.IsAny<Meal>())).ReturnsAsync(meal);
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+    
+        // When
+        MealResponse? actual = await _mealService.UpdateMealAsync(Guid.NewGuid(), request);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.Update(It.IsAny<Meal>()), Times.Once);
+
+        Assert.Null(actual);
+    }
 
     //when number of calories is provided and database successfully updates meal, it should return the updated meal
+    [Fact]
+    public async void UpdateMealAsync_WhenRepositorySuccessfullyUpdatesMeal_ReturnUpdatedMeal()
+    {
+        // Given
+        Meal meal = _fixture.Create<Meal>();
+        UpdateMealRequest request = new() { Text = "Waakye with fish", NumberOfCalories = meal.NumberOfCalories };
+        MealResponse expected = new();
+
+        _mealRepositoryMock.Setup(m => m.Update(It.IsAny<Meal>()))
+                           .Callback<Meal>(x => { meal.Created = x.Created; meal.Text = x.Text; expected = meal.ToMealResponse(); })
+                           .ReturnsAsync(meal);
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+    
+        // When
+        MealResponse? actual = await _mealService.UpdateMealAsync(meal.Id, request);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.Update(It.IsAny<Meal>()), Times.Once());
+
+        Assert.NotNull(actual);
+        Assert.Equal(expected.Id, actual.Id);
+        Assert.Equal(expected.Text, actual.Text);
+    }
 
     #endregion
 
     #region GetMealsAsyncTests
 
     //when a search string is provided, it should return meals that match the search string
+    [Fact]
+    public void GetMealsAsync_WhenSearchStringIsProvided_ReturnAllMealsThatMatch()
+    {
+        // Given
+    
+        // When
+    
+        // Then
+    }
 
     //when a search string is not provided, it should return all meals
 
