@@ -65,7 +65,7 @@ public class UserService : IUserService
     public async Task CheckForCalorieDeficiencyAsync(Guid userId)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
-        double totalUserCaloriesForToday = await _mealService.GetTotalUserCaloriesForToday(userId);
+        double totalUserCaloriesForToday = await _mealService.GetTotalUserCaloriesForTodayAsync(userId);
         user!.IsCaloriesDeficient = totalUserCaloriesForToday < user.ExpectedNumberOfCaloriesPerDay;
         await _userManager.UpdateAsync(user);
     }

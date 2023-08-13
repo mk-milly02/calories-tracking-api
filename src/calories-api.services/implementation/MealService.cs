@@ -79,7 +79,7 @@ public class MealService : IMealService
         return meal?.ToMealResponse();
     }
 
-    public async Task<double> GetTotalUserCaloriesForToday(Guid userId)
+    public async Task<double> GetTotalUserCaloriesForTodayAsync(Guid userId)
     {
         IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
         IEnumerable<Meal> mealsForToday = meals.Where(meal => meal.Created.Date.Equals(DateTime.Today));

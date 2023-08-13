@@ -57,7 +57,7 @@ public class MealsController : ControllerBase
     public async Task<IActionResult> GetTotalCaloriesForToday(Guid id)
     {
         UserProfile? user = await _userService.GetUserByIdAsync(id);
-        return user is null ? BadRequest("Invalid request") : Ok(await _mealService.GetTotalUserCaloriesForToday(id));
+        return user is null ? BadRequest("Invalid request") : Ok(await _mealService.GetTotalUserCaloriesForTodayAsync(id));
     }
 
     [HttpPost]
