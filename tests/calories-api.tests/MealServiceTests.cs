@@ -9,7 +9,7 @@ public class MealServiceTests
     private readonly Mock<IMealRepository> _mealRepositoryMock;
     private readonly Mock<IConfiguration> _configurationMock;
     private readonly Mock<HttpClient> _httpClientMock;
-    private readonly List<Meal> _meals = new();
+    private List<Meal> _meals = new();
 
     public MealServiceTests()
     {
@@ -126,18 +126,46 @@ public class MealServiceTests
 
     #region GetMealsAsyncTests
 
-    //when a search string is provided, it should return meals that match the search string
     [Fact]
-    public void GetMealsAsync_WhenSearchStringIsProvided_ReturnAllMealsThatMatch()
+    public async void GetMealsAsync_WhenSearchStringIsProvided_ReturnAllMealsThatMatch()
     {
         // Given
-    
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        QueryParameters query = new() { SeachString = "Text", PageSize = 4 };
+
+        _mealRepositoryMock.Setup(m => m.RetrieveAll()).ReturnsAsync(_meals);
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+
         // When
+        IEnumerable<MealResponse> actual = await _mealService.GetMealsAsync(query);
     
         // Then
+        _mealRepositoryMock.Verify(m => m.RetrieveAll(), Times.Once());
+
+        Assert.Equal(_meals.Count - 1, actual.Count());
+        Assert.Equal(_meals.First().Id, actual.First().Id);
+        Assert.Contains("Text", actual.Last().Text);
     }
 
-    //when a search string is not provided, it should return all meals
+    [Fact]
+    public async void GetMealsAsync_WhenSearchStringIsNotProvided_ReturnAllMeals()
+    {
+        // Given
+        _meals = _fixture.CreateMany<Meal>(10).ToList();
+        QueryParameters query = new() { PageSize = 5 };
+
+        _mealRepositoryMock.Setup(m => m.RetrieveAll()).ReturnsAsync(_meals);
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+
+        // When
+        IEnumerable<MealResponse> actual = await _mealService.GetMealsAsync(query);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.RetrieveAll(), Times.Once());
+
+        Assert.Equal(_meals.Count / 2, actual.Count());
+        Assert.Equal(_meals.First().Id, actual.First().Id);
+    }
 
     #endregion
 
