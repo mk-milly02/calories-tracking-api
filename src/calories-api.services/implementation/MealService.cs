@@ -45,7 +45,7 @@ public class MealService : IMealService
 
         if(!string.IsNullOrEmpty(query.SeachString)) 
         { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString)); 
+            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString, StringComparison.OrdinalIgnoreCase)); 
         }
 
         foreach (Meal meal in meals)
@@ -63,7 +63,7 @@ public class MealService : IMealService
 
         if(!string.IsNullOrEmpty(query.SeachString)) 
         { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString)); 
+            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString, StringComparison.OrdinalIgnoreCase)); 
         }
 
         foreach (Meal meal in meals)

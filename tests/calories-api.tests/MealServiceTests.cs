@@ -171,9 +171,97 @@ public class MealServiceTests
 
     #region GetMealsByUserAsyncTests
 
-    //when a search string is provided, it should return meals by user that match the search string
+    [Fact]
+    public async void GetMealsByUserAsync_WhenSearchStringIsProvided_ReturnsMealsThatMatch()
+    {
+        // Given
+        Guid userId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6");
+        List<Meal> mealsByUser = new()
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "French toast",
+                NumberOfCalories = 400
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Rice and beans",
+                NumberOfCalories = 400
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Toasted bread with orange juice",
+                NumberOfCalories = 400
+            }
+        };
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        _meals.AddRange(mealsByUser);
+        QueryParameters query = new() { PageSize = 5, SeachString = "toast" };
 
-    //when a search string is not provided, it should return all user meals
+        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+    
+        // When
+        IEnumerable<MealResponse> actual = await _mealService.GetMealsByUserAsync(userId, query);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once);
+
+        Assert.NotNull(actual);
+        Assert.True(actual.Count() is 2);
+    }
+
+    [Fact]
+    public async void GetMealsByUserAsync_WhenSearchStringIsNotProvided_ReturnsAllMeals()
+    {
+        // Given
+        Guid userId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6");
+        List<Meal> mealsByUser = new()
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "French toast",
+                NumberOfCalories = 400
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Rice and beans",
+                NumberOfCalories = 400
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Toasted bread with orange juice",
+                NumberOfCalories = 400
+            }
+        };
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        _meals.AddRange(mealsByUser);
+        QueryParameters query = new() { PageSize = 5, };
+
+        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+    
+        // When
+        IEnumerable<MealResponse> actual = await _mealService.GetMealsByUserAsync(userId, query);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once);
+
+        Assert.NotNull(actual);
+        Assert.True(actual.Count() is 3);
+    }
 
     #endregion
 
