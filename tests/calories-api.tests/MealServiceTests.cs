@@ -267,29 +267,184 @@ public class MealServiceTests
 
     #region GetMealByIdAsyncTests
 
-    //when id matches a corresponding meal in the database, the meal is returned
+    [Fact]
+    public async void GetMealByIdAsync_WhenMealExists_ReturnMeal()
+    {
+        // Given
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        Guid id = _meals.First().Id;
+        MealResponse expected = _meals.First().ToMealResponse();
 
-    //when the id doesn't match a corresponding meal in the database, it should return null
+        _mealRepositoryMock.Setup(m => m.Retrieve(It.IsAny<Guid>())).ReturnsAsync(_meals.SingleOrDefault(x => x.Id == id));
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+
+        // When
+        MealResponse? actual = await _mealService.GetMealByIdAsync(id);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.Retrieve(It.IsAny<Guid>()), Times.Once);
+
+        Assert.NotNull(actual);
+        Assert.Equal(expected.Text, actual.Text);
+    }
+
+    [Fact]
+    public async void GetMealByIdAsync_WhenMealDoesNotExists_ReturnNull()
+    {
+        // Given
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        Guid id = Guid.NewGuid();
+
+        _mealRepositoryMock.Setup(m => m.Retrieve(It.IsAny<Guid>())).ReturnsAsync(_meals.SingleOrDefault(x => x.Id == id));
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+
+        // When
+        MealResponse? actual = await _mealService.GetMealByIdAsync(id);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.Retrieve(It.IsAny<Guid>()), Times.Once);
+
+        Assert.Null(actual);
+    }
 
     #endregion
 
     #region GetTotalUserCaloriesForTodayAsyncTests
 
-    //when the userId is valid and user has added meals today, then the total number of calories for the day should be returned
+    [Fact]
+    public async void GetTotalUserCaloriesForTodayAsync_WhenMealsHaveBeenAddedToday_ReturnTotalCaloriesForToday()
+    {
+        // Given
+        Guid userId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6");
+        List<Meal> mealsByUser = new()
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "French toast",
+                NumberOfCalories = 400
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Rice and beans",
+                NumberOfCalories = 700
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Toasted bread with orange juice",
+                NumberOfCalories = 1000
+            }
+        };
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        _meals.AddRange(mealsByUser);
+        double expected = 2100;
 
-    //when the userId is valid and user has not added meals today, then the total number of calories for the day should be 0
+        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList()); 
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+    
+        // When
+        double actual = await _mealService.GetTotalUserCaloriesForTodayAsync(userId);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once());
 
-    //when the userId is not valid, then there would be no number of calories for the day (0)
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public async void GetTotalUserCaloriesForTodayAsync_WhenNoMealsHaveBeenAddedToday_ReturnZero()
+    {
+        // Given
+        Guid userId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6");
+        List<Meal> mealsByUser = new()
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "French toast",
+                NumberOfCalories = 400,
+                Created = DateTime.MinValue
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Rice and beans",
+                NumberOfCalories = 700,
+                Created = DateTime.MinValue
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = new("e48c46a6-2287-468b-8abc-9ae4ab75e7b6"),
+                Text = "Toasted bread with orange juice",
+                NumberOfCalories = 1000,
+                Created = DateTime.MinValue
+            }
+        };
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        _meals.AddRange(mealsByUser);
+        double expected = 0;
+
+        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList()); 
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+    
+        // When
+        double actual = await _mealService.GetTotalUserCaloriesForTodayAsync(userId);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once());
+
+        Assert.Equal(expected, actual);
+    }
 
     #endregion
 
     #region RemoveMealAsyncTests
 
-    //when database successfully removes the meal, return true
+    [Fact]
+    public async void RemoveMealAsync_WhenRepositorySuccessfullyRemovesMeal_ReturnsTrue()
+    {
+        // Given
+        _mealRepositoryMock.Setup(m => m.Delete(It.IsAny<Guid>())).ReturnsAsync(true);
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
 
-    //when database fails to remove the meal, return false
+        // When
+        bool? actual = await _mealService.RemoveMealAsync(Guid.NewGuid());
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.Delete(It.IsAny<Guid>()), Times.Once());
 
-    //if the id is invalid, return null
+        Assert.NotNull(actual);
+        Assert.True(actual);
+    }
+
+    [Fact]
+    public async void RemoveMealAsync_WhenRepositoryFailsToRemoveMeal_ReturnsFalse()
+    {
+        // Given
+        _meals = _fixture.CreateMany<Meal>(5).ToList();
+        Guid id = _meals.Last().Id;
+
+        _mealRepositoryMock.Setup(m => m.Delete(It.IsAny<Guid>())).ReturnsAsync(!_meals.Exists(x => x.Id == id));
+        _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
+
+        // When
+        bool? actual = await _mealService.RemoveMealAsync(id);
+    
+        // Then
+        _mealRepositoryMock.Verify(m => m.Delete(It.IsAny<Guid>()), Times.Once());
+
+        Assert.NotNull(actual);
+        Assert.False(actual);
+        Assert.False(_meals.Count is 4);
+    }
 
     #endregion
 }
