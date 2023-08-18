@@ -18,7 +18,7 @@ public class MealsController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet]
+    [HttpGet] // api/meals?s=toast&page=1&size=10
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(200, Type = typeof(IEnumerable<MealResponse>))]
     public async Task<IActionResult> GetMeals([FromQuery] QueryParameters parameters)
@@ -26,19 +26,19 @@ public class MealsController : ControllerBase
         return Ok(await _mealService.GetMealsAsync(parameters));
     }
 
-    [HttpGet("{id}/{parameters}")]
+    [HttpGet("user/{id}")] // api/meals/user/e48c46a6-2287-468b-8abc-9ae4ab75e7b6?s=toast&page=1&size=10
     [Authorize(Policy = "MustBeAnAdministrator")]
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(400)]
     [ProducesResponseType(200, Type = typeof(IEnumerable<MealResponse>))]
-    public async Task<IActionResult> GetMealsByUser(Guid userId, QueryParameters parameters)
+    public async Task<IActionResult> GetMealsByUser(Guid userId, [FromQuery] QueryParameters parameters)
     {
         UserProfile? user = await _userService.GetUserByIdAsync(userId);
         if (user is null) return BadRequest("Invalid user id");
         return Ok(await _mealService.GetMealsByUserAsync(userId, parameters));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id}")] // api/meals/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [Authorize(Policy = "MustBeAnAdministrator")]
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(400)]
@@ -49,7 +49,7 @@ public class MealsController : ControllerBase
         return meal is null ? BadRequest("Invalid request") : Ok(meal);
     }
 
-    [HttpGet("total-calories/{id}")]
+    [HttpGet("calories/{id}")] // api/meals/calories/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [Authorize(Policy = "MustBeAnAdministrator")]
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(400)]
@@ -60,7 +60,7 @@ public class MealsController : ControllerBase
         return user is null ? BadRequest("Invalid request") : Ok(await _mealService.GetTotalUserCaloriesForTodayAsync(id));
     }
 
-    [HttpPost]
+    [HttpPost] // api/meals
     [Authorize(Policy = "MustBeAnAdministrator")]
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(400)]
@@ -72,7 +72,7 @@ public class MealsController : ControllerBase
         return meal is null ? BadRequest("Repository failed to add meal") : CreatedAtAction(nameof(GetMeal), new { id = meal.Id }, meal);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id}")] // api/meals/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [Authorize(Policy = "MustBeAnAdministrator")]
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(400)]
@@ -84,7 +84,7 @@ public class MealsController : ControllerBase
         return meal is null ? BadRequest("Repository failed to update meal") : Ok(meal);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}")] // api/meals/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [Authorize(Policy = "MustBeAnAdministrator")]
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(400)]

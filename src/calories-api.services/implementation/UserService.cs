@@ -40,7 +40,7 @@ public class UserService : IUserService
     public async Task<UserProfile?> GetUserByIdAsync(Guid userId)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
-        return user is null ? null : user.ToUserProfile();
+        return user?.ToUserProfile();
     }
 
     public async Task<UserProfile?> UpdateUserAsync(Guid userId, UpdateUserRequest request)

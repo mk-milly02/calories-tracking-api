@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-
-namespace calories_api.tests;
+﻿namespace calories_api.tests;
 
 public class MealServiceTests
 {

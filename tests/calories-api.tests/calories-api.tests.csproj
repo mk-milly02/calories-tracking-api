@@ -8,10 +8,13 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <UserSecretsId>9326a8cd-3dbf-4d4d-9a93-e9524c3700b6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoFixture" Version="4.18.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.10" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
     <PackageReference Include="Moq" Version="4.20.69" />
     <PackageReference Include="xunit" Version="2.4.2" />
@@ -27,6 +30,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\calories-api.services\calories-api.services.csproj" />
+    <ProjectReference Include="..\..\src\calories-api.presentation\calories-api.presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="unit-tests\" />
   </ItemGroup>
 
 </Project>

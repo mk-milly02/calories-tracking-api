@@ -16,6 +16,12 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    /// <summary>
+    /// Gets user by id
+    /// </summary>
+    /// <param name="id">User id</param>
+    /// <returns>The users profile</returns>
+    /// api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [HttpGet("{id}")]
     [Authorize(Policy = "MustBeAUserManager")]
     [Authorize(Policy = "MustBeAnAdministrator")]
@@ -27,7 +33,7 @@ public class UsersController : ControllerBase
         return user is null ? NotFound("Invalid user id") : Ok(user);
     }
 
-    [HttpGet]
+    [HttpGet] // api/users?page=1&size=10
     [Authorize(Policy = "MustBeAUserManager")]
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(200, Type = typeof(IEnumerable<UserProfile>))]
@@ -36,8 +42,14 @@ public class UsersController : ControllerBase
         return Ok(_userService.GetAllUsers(query));
     }
 
+    /// <summary>
+    /// Allow users to create accounts
+    /// </summary>
+    /// <param name="request">User registration request</param>
+    /// <returns>Newly create user profile</returns>
+    /// api/users/register
     [AllowAnonymous]
-    [HttpPost("sign-up")]
+    [HttpPost("register")]
     [ProducesResponseType(201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> SignUp([FromBody] UserRegistrationRequest request)
@@ -50,7 +62,7 @@ public class UsersController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpPost("sign-in")]
+    [HttpPost("sign-in")] // api/users/sign-in
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(200, Type = typeof(AuthenticationResponse))]
@@ -62,8 +74,7 @@ public class UsersController : ControllerBase
         return response is null ? Unauthorized("Invalid sign in credentials") : Ok(response);
     }
 
-
-    [HttpPost("register-user")]
+    [HttpPost("register/user")] // api/users/register/user
     [Authorize(Policy = "MustBeAUserManager")]
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
@@ -77,7 +88,7 @@ public class UsersController : ControllerBase
         return userProfile is null ? BadRequest("Repository failed to create user") : Ok(userProfile);
     }
 
-    [HttpPost("register-manager")]
+    [HttpPost("register/manager")] // api/users/register/manager
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
@@ -90,7 +101,7 @@ public class UsersController : ControllerBase
         return userProfile is null ? BadRequest("Repository failed to create user") : Ok(userProfile);
     }
 
-    [HttpPost("register-admin")]
+    [HttpPost("register/admin")] // api/users/register/admin
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
@@ -103,7 +114,7 @@ public class UsersController : ControllerBase
         return userProfile is null ? BadRequest("Repository failed to create user") : Ok(userProfile);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id}")] // api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [Authorize(Policy = "MustBeAUserManager")]
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
@@ -115,7 +126,7 @@ public class UsersController : ControllerBase
         return user is null ? BadRequest("Repository failed to update user") : Ok(user);
     }
 
-    [HttpPut("settings")]
+    [HttpPut("settings")] // api/users/settings
     [Authorize(Policy = "MustBeARegularUser")]
     [Authorize(Policy = "MustBeAUserManager")]
     [Authorize(Policy = "MustBeAnAdministrator")]
@@ -128,7 +139,7 @@ public class UsersController : ControllerBase
         return user is null ? BadRequest("Repository failed to update user settings") : Ok(user);
     }
 
-    [HttpPut("add-password/{id}")]
+    [HttpPut("password/{id}")] // api/users/password/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [Authorize(Policy = "MustBeARegularUser")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
@@ -141,7 +152,7 @@ public class UsersController : ControllerBase
         return added.Value? NoContent() : BadRequest("Repository failed to add password");
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}")] // api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [Authorize(Policy = "MustBeAUserManager")]
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(204)]

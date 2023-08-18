@@ -26,7 +26,7 @@ public static class DependencyInjectionExtensions
     public static void AddTokenBasedAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         IConfiguration bearer = configuration.GetRequiredSection("Authentication:Schemes:Bearer")
-                                ?? throw new InvalidOperationException("Bearer scheme is not configured");
+                                ?? throw new NullReferenceException("Bearer scheme is not configured");
         
         services.AddAuthentication(options => 
         {
@@ -74,7 +74,8 @@ public static class DependencyInjectionExtensions
 
     public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        string? connectionString = configuration.GetConnectionString("default");
+        string connectionString = configuration.GetConnectionString("default")
+                                  ?? throw new NullReferenceException("Connection string is not configured");
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
         services.AddIdentity<User, Role>(options => 
@@ -115,7 +116,7 @@ public static class DependencyInjectionExtensions
         {
             // Create the user manager identity
             User manager = configuration.GetSection("Identity:UserManager").Get<User>()
-                                 ?? throw new NullReferenceException("User manager's details not provided");
+                           ?? throw new NullReferenceException("User manager's details not provided");
 
             string mpassword = configuration["Identity:UserManager:Password"]
                               ?? throw new NullReferenceException("User manager's password not provided");
@@ -133,7 +134,7 @@ public static class DependencyInjectionExtensions
         {
             // Create the regular user identity
             User user = configuration.GetSection("Identity:RegularUser").Get<User>()
-                                 ?? throw new NullReferenceException("Regular user's details not provided");
+                        ?? throw new NullReferenceException("Regular user's details not provided");
 
             string upassword = configuration["Identity:RegularUser:Password"]
                               ?? throw new NullReferenceException("Regular user's password not provided");
