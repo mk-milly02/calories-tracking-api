@@ -4,11 +4,13 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 {
     private readonly CustomWebApplicationFactory<Program> _factory;
     private readonly HttpClient _httpClient;
+    private readonly IConfiguration _configuration;
 
     public UsersControllerTests(CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _httpClient = _factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+        _configuration = _factory.Services.GetRequiredService<IConfiguration>();
     }
 
     [Theory]
@@ -28,7 +30,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
         {
-            Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
+            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
         };
 
         // When
@@ -56,7 +58,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
         {
-            Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
+            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
         };
 
         // When
@@ -82,7 +84,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
         {
-            Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
+            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
         };
 
         // When
@@ -90,5 +92,81 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         // Then
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("test", "project")]
+    public async Task SignIn_WhenAuthenticationRequestModelIsNotValid_ReturnBadRequestWithErrors(string email, string password)
+    {
+        // Given
+        AuthenticationRequest model = new() 
+        {
+            Password = password,
+            Email = email
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+        };
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("admin@calories-tracker.com", "1234")]
+    [InlineData("jp@theloft.com", "qwerty")]
+    [InlineData("manager@calories-tracker.com", "hTtp$://")]
+    public async Task SignIn_WhenSignInCredentialsAreInvalid_ReturnBadRequestWithErrorMessage(string email, string password)
+    {
+        // Given
+        AuthenticationRequest model = new() 
+        {
+            Password = password,
+            Email = email
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+        };
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("Invalid sign in credentials", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task SignIn_WhenUserIsSuccessfullyAuthenticated_ReturnOkWithAuthenticationResponse()
+    {
+        // Given
+        
+        AuthenticationRequest model = new() 
+        {
+            Password = _configuration["Identity:RegularUser:Password"],
+            Email = _configuration["Identity:RegularUser:Email"]
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+        };
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        AuthenticationResponse? authentication = JsonConvert.DeserializeObject<AuthenticationResponse>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(authentication);
+        Assert.NotNull(authentication.Token);
     }
 }

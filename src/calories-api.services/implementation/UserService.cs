@@ -74,7 +74,7 @@ public class UserService : IUserService
     {
         User? user = await _userManager.FindByEmailAsync(request.Email!);
 
-        if(user is null) { return null; }
+        if (user is null) { return null; }
         string saltedPassword = Security.GenerateSaltedPassword(request.Password!, user.PasswordSalt!);
         return await _userManager.CheckPasswordAsync(user, saltedPassword) ? await _tokenService.GenerateTokenAsync(user) : null;
     }
