@@ -5,6 +5,7 @@ global using System.Text;
 global using AutoFixture;
 global using Newtonsoft.Json;
 global using calories_api.domain;
+global using System.Net.Http.Json;
 global using calories_api.services;
 global using Microsoft.AspNetCore.Mvc;
 global using calories_api.presentation;

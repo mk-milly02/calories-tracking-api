@@ -43,9 +43,9 @@ public class MealService : IMealService
         List<MealResponse> output = new();
         IEnumerable<Meal> meals = await _repository.RetrieveAll();
 
-        if(!string.IsNullOrEmpty(query.SeachString)) 
+        if(!string.IsNullOrEmpty(query.S)) 
         { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString, StringComparison.OrdinalIgnoreCase)); 
+            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase)); 
         }
 
         foreach (Meal meal in meals)
@@ -53,7 +53,7 @@ public class MealService : IMealService
             output.Add(meal.ToMealResponse());
         }
 
-        return output.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
+        return output.Skip((query.Page - 1) * query.Size).Take(query.Size);
     }
 
     public async Task<IEnumerable<MealResponse>> GetMealsByUserAsync(Guid userId, QueryParameters query)
@@ -61,16 +61,16 @@ public class MealService : IMealService
         List<MealResponse> output = new();
         IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
 
-        if(!string.IsNullOrEmpty(query.SeachString)) 
+        if(!string.IsNullOrEmpty(query.S)) 
         { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.SeachString, StringComparison.OrdinalIgnoreCase)); 
+            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase)); 
         }
 
         foreach (Meal meal in meals)
         {
             output.Add(meal.ToMealResponse());
         }
-        return output.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
+        return output.Skip((query.Page - 1) * query.Size).Take(query.Size);
     }
 
     public async Task<MealResponse?> GetMealByIdAsync(Guid id)

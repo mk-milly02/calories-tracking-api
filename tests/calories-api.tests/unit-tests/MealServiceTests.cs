@@ -129,7 +129,7 @@ public class MealServiceTests
     {
         // Given
         _meals = _fixture.CreateMany<Meal>(5).ToList();
-        QueryParameters query = new() { SeachString = "Text", PageSize = 4 };
+        QueryParameters query = new() { S = "Text", Size = 4 };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAll()).ReturnsAsync(_meals);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
@@ -150,7 +150,7 @@ public class MealServiceTests
     {
         // Given
         _meals = _fixture.CreateMany<Meal>(10).ToList();
-        QueryParameters query = new() { PageSize = 5 };
+        QueryParameters query = new() { Size = 5 };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAll()).ReturnsAsync(_meals);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
@@ -200,7 +200,7 @@ public class MealServiceTests
         };
         _meals = _fixture.CreateMany<Meal>(5).ToList();
         _meals.AddRange(mealsByUser);
-        QueryParameters query = new() { PageSize = 5, SeachString = "toast" };
+        QueryParameters query = new() { Size = 5, S = "toast" };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
@@ -246,7 +246,7 @@ public class MealServiceTests
         };
         _meals = _fixture.CreateMany<Meal>(5).ToList();
         _meals.AddRange(mealsByUser);
-        QueryParameters query = new() { PageSize = 5, };
+        QueryParameters query = new() { Size = 5, };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);

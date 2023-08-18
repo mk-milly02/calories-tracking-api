@@ -37,7 +37,7 @@ builder.Services.AddSwaggerGen(s =>
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
-        Scheme = "bearer"
+        Scheme = "Bearer"
     });
     s.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -65,8 +65,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.SeedIdentityUsers();
 
 app.Run();

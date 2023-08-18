@@ -34,7 +34,7 @@ public class UserService : IUserService
             profiles.Add(user.ToUserProfile());
         }
 
-        return profiles.Skip((query.PageNumber - 1) * query.PageSize).Take(query.PageSize);
+        return profiles.Skip((query.Page - 1) * query.Size).Take(query.Size);
     }
 
     public async Task<UserProfile?> GetUserByIdAsync(Guid userId)
@@ -101,7 +101,11 @@ public class UserService : IUserService
         User user = request.ToUser();
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
-        return result.Succeeded ? user.ToUserProfile() : null;
+
+        UserProfile profile = user.ToUserProfile();
+        profile.Role = nameof(Roles.RegularUser);
+        
+        return result.Succeeded ? profile : null;
     }
 
     public async Task<UserProfile?> CreateUserManagerAsync(CreateUserRequest request)

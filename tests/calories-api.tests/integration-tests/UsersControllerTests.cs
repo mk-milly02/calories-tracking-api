@@ -30,7 +30,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+            Content = JsonContent.Create(model)
         };
 
         // When
@@ -58,7 +58,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+            Content = JsonContent.Create(model)
         };
 
         // When
@@ -84,7 +84,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+            Content = JsonContent.Create(model)
         };
 
         // When
@@ -108,7 +108,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+            Content = JsonContent.Create(model)
         };
 
         // When
@@ -133,7 +133,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+            Content = JsonContent.Create(model)
         };
 
         // When
@@ -157,7 +157,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json")
+            Content = JsonContent.Create(model)
         };
 
         // When
@@ -168,5 +168,143 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         AuthenticationResponse? authentication = JsonConvert.DeserializeObject<AuthenticationResponse>(await response.Content.ReadAsStringAsync());
         Assert.NotNull(authentication);
         Assert.NotNull(authentication.Token);
+    }
+
+    [Fact]
+    public async Task RegisterRegularUser_WhenUserDoesNotHavePermission_ReturnsForbidden()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = null,
+            LastName = null,
+            Email = null
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignIn("user")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("manager")]
+    [InlineData("administrator")]
+    public async Task RegisterRegularUser_WhenCreateUserRequestModelIsNotValid_ReturnsBadRequestWithErrors(string role)
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = null,
+            LastName = null,
+            Email = null
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignIn(role)}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("manager")]
+    [InlineData("administrator")]
+    public async Task RegisterRegularUser_WhenUserEmailAlreadyExists_ReturnsBadRequestWithErrorMessage(string role)
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = "null",
+            LastName = "null",
+            Email = "jp@theloft.com"
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignIn(role)}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("User already exists", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task RegisterRegularUser_WhenUserIsSuccessfullyCreated_ReturnsUserProfile()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = "jim",
+            LastName = "halpert",
+            Email = "jim@athelead.com"
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignIn("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        UserProfile? user = JsonConvert.DeserializeObject<UserProfile>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(user);
+        Assert.Equal(model.FirstName, user.FirstName);
+        Assert.NotNull(user.Role);
+        Assert.Equal(nameof(Roles.RegularUser), user.Role);
+    }
+
+    private async Task<string> SignIn(string role)
+    {
+        AuthenticationRequest model = new();
+
+        switch (role)
+        {
+            case "administrator":
+                model.Email = _configuration["Identity:Administrator:Email"];
+                model.Password = _configuration["Identity:Administrator:Password"];
+                break;
+            case "manager":
+                model.Email = _configuration["Identity:UserManager:Email"];
+                model.Password = _configuration["Identity:UserManager:Password"];
+                break;
+            case "user":
+                model.Email = _configuration["Identity:RegularUser:Email"];
+                model.Password = _configuration["Identity:RegularUser:Password"];
+                break;
+            default:
+                break;
+        }
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
+        {
+            Content = JsonContent.Create(model)
+        };
+
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        AuthenticationResponse authentication = JsonConvert.DeserializeObject<AuthenticationResponse>(await response.Content.ReadAsStringAsync())!;
+        return authentication.Token!;
     }
 }

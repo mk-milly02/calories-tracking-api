@@ -23,8 +23,7 @@ public class UsersController : ControllerBase
     /// <returns>The users profile</returns>
     /// api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [HttpGet("{id}")]
-    [Authorize(Policy = "MustBeAUserManager")]
-    [Authorize(Policy = "MustBeAnAdministrator")]
+    [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetUserById(Guid id)
@@ -34,8 +33,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet] // api/users?page=1&size=10
-    [Authorize(Policy = "MustBeAUserManager")]
-    [Authorize(Policy = "MustBeAnAdministrator")]
+    [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(200, Type = typeof(IEnumerable<UserProfile>))]
     public IActionResult GetAllUsers([FromQuery] PagingFilter query)
     {
@@ -81,9 +79,9 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("register/user")] // api/users/register/user
-    [Authorize(Policy = "MustBeAUserManager")]
-    [Authorize(Policy = "MustBeAnAdministrator")]
+    [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     public async Task<IActionResult> RegisterRegularUser([FromBody] CreateUserRequest request)
     {
@@ -121,8 +119,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")] // api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
-    [Authorize(Policy = "MustBeAUserManager")]
-    [Authorize(Policy = "MustBeAnAdministrator")]
+    [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(400)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request, Guid id)
@@ -133,9 +130,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("settings")] // api/users/settings
-    [Authorize(Policy = "MustBeARegularUser")]
-    [Authorize(Policy = "MustBeAUserManager")]
-    [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     public async Task<IActionResult> UpdateUserSettings([FromBody] UserSettings settings)
@@ -159,8 +153,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")] // api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
-    [Authorize(Policy = "MustBeAUserManager")]
-    [Authorize(Policy = "MustBeAnAdministrator")]
+    [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]

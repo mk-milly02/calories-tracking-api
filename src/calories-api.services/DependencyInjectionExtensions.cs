@@ -2,6 +2,7 @@
 using calories_api.domain;
 using calories_api.infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -54,21 +55,29 @@ public static class DependencyInjectionExtensions
         {
             options.AddPolicy("MustBeARegularUser", policy => 
             {
+                policy.RequireAuthenticatedUser();
                 policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                policy.RequireRole(nameof(Roles.RegularUser));
-            });
-            
-            options.AddPolicy("MustBeAUserManager", policy =>
-            {
-                policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                policy.RequireRole(nameof(Roles.UserManager));
+                policy.RequireRole(new[] { nameof(Roles.RegularUser) });
             });
 
             options.AddPolicy("MustBeAnAdministrator", policy => 
             {
+                policy.RequireAuthenticatedUser();
                 policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                policy.RequireRole(nameof(Roles.Administrator));
+                policy.RequireRole(new[] { nameof(Roles.Administrator) });
             });
+
+            options.AddPolicy("MustBeAnAdministratorOrAUserManager", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                policy.RequireRole(new[] { nameof(Roles.Administrator), nameof(Roles.UserManager) });
+            });
+
+            options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireRole(new[]
+            {
+                nameof(Roles.RegularUser), nameof(Roles.UserManager), nameof(Roles.Administrator)
+            }).Build();
         });
     }
 
