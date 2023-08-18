@@ -43,7 +43,7 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Allow users to create accounts
+    /// Allows users (anonymous) to create accounts
     /// </summary>
     /// <param name="request">User registration request</param>
     /// <returns>Newly create user profile</returns>
@@ -61,8 +61,14 @@ public class UsersController : ControllerBase
         return user is null ? BadRequest("Repository failed to create user") : CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
     }
 
+    /// <summary>
+    /// Allows users (anonymous) to sign in
+    /// </summary>
+    /// <param name="request">User authentication request</param>
+    /// <returns>Authentication response with a token and expiration time</returns>
+    /// api/users/sign-in
     [AllowAnonymous]
-    [HttpPost("sign-in")] // api/users/sign-in
+    [HttpPost("sign-in")]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(200, Type = typeof(AuthenticationResponse))]

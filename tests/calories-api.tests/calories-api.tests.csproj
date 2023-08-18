@@ -33,8 +33,4 @@
     <ProjectReference Include="..\..\src\calories-api.presentation\calories-api.presentation.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="unit-tests\" />
-  </ItemGroup>
-
 </Project>

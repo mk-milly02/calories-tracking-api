@@ -37,4 +37,58 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Theory]
+    [InlineData("admin@calories-tracker.com")]
+    [InlineData("jp@theloft.com")]
+    [InlineData("manager@calories-tracker.com")]
+    public async Task SignUp_WhenEmailAlreadyExists_ReturnBadRequestWithErrorMessage(string email)
+    {
+        // Given
+        UserRegistrationRequest model = new() 
+        {
+            FirstName = "fName",
+            LastName = "lName",
+            Username = "uName",
+            Password = "password",
+            Email = email
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
+        };
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("User already exists", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task SignUp_WhenRepositorySuccessfullyCreatesUserAccount_ReturnCreatedWithUserProfile()
+    {
+        // Given
+        UserRegistrationRequest model = new() 
+        {
+            FirstName = "imagine",
+            LastName = "dragons",
+            Username = "imagine.dragons",
+            Password = "selene",
+            Email = "mercury@act.com"
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
+        };
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
 }
