@@ -31,9 +31,8 @@ public class UserService : IUserService
 
         foreach (User user in users)
         {
-            UserProfile profile = user.ToUserProfile();
             IList<string> roles = await _userManager.GetRolesAsync(user);
-            profile.Role = roles.FirstOrDefault();
+            UserProfile profile = user.ToUserProfile(roles.First());
             profiles.Add(profile);
         }
 
@@ -47,8 +46,7 @@ public class UserService : IUserService
         if (user is not null)
         {
             IList<string> roles = await _userManager.GetRolesAsync(user);
-            UserProfile profile = user.ToUserProfile();
-            profile.Role = roles.FirstOrDefault();
+            UserProfile profile = user.ToUserProfile(roles.First());
             return profile;
         }
 
@@ -63,7 +61,14 @@ public class UserService : IUserService
 
         user = request.ToUser();
         IdentityResult result = await _userManager.UpdateAsync(user);
-        return result.Succeeded ? user.ToUserProfile() : null;
+
+        if (result.Succeeded)
+        {
+            IList<string> roles = await _userManager.GetRolesAsync(user);
+            return user.ToUserProfile(roles.First());
+        }
+        
+        return null;
     }
 
     public async Task<UserProfile?> UpdateUserSettingsAsync(UserSettings settings)
@@ -71,7 +76,14 @@ public class UserService : IUserService
         User? user = await _userManager.FindByIdAsync(settings.UserId.ToString());
         user!.ExpectedNumberOfCaloriesPerDay = settings.ExpectedNumberOfCaloriesPerDay;
         IdentityResult result = await _userManager.UpdateAsync(user);
-        return result.Succeeded ? user.ToUserProfile() : null;
+        
+        if (result.Succeeded)
+        {
+            IList<string> roles = await _userManager.GetRolesAsync(user);
+            return user.ToUserProfile(roles.First());
+        }
+        
+        return null;
     }
 
     public async Task CheckForCalorieDeficiencyAsync(Guid userId)
@@ -114,8 +126,7 @@ public class UserService : IUserService
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
 
-        UserProfile profile = user.ToUserProfile();
-        profile.Role = nameof(Roles.RegularUser);
+        UserProfile profile = user.ToUserProfile(nameof(Roles.RegularUser));
         
         return result.Succeeded ? profile : null;
     }
@@ -126,8 +137,7 @@ public class UserService : IUserService
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.UserManager.ToString());
 
-        UserProfile profile = user.ToUserProfile();
-        profile.Role = nameof(Roles.UserManager);
+        UserProfile profile = user.ToUserProfile(nameof(Roles.UserManager));
         
         return result.Succeeded ? profile : null;
     }
@@ -137,7 +147,10 @@ public class UserService : IUserService
         User user = request.ToUser();
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.Administrator.ToString());
-        return result.Succeeded ? user.ToUserProfile() : null;
+
+        UserProfile profile = user.ToUserProfile(nameof(Roles.Administrator));
+
+        return result.Succeeded ? profile : null;
     }
 
     public async Task<bool?> CreatePasswordAsync(Guid userId, CreatePasswordRequest request)

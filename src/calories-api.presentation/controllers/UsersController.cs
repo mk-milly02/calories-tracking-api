@@ -109,8 +109,8 @@ public class UsersController : ControllerBase
     /// <summary>
     /// Allows the administrator to create an account for a user managers
     /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
+    /// <param name="request">Create user request</param>
+    /// <returns>A user profile</returns>
     /// api/users/register/manager
     [HttpPost("register/manager")]
     [Authorize(Policy = "MustBeAnAdministrator")]

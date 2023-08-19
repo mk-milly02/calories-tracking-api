@@ -444,6 +444,84 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         Assert.Equal(nameof(Roles.UserManager), user.Role);
     }
     
+    [Fact]
+    public async Task RegisterAdministrator_WhenCreateUserRequestModelIsNotValid_ReturnsBadRequestWithErrors()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = null,
+            LastName = null,
+            Email = null
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/admin")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegisterAdministrator_WhenUserEmailAlreadyExists_ReturnsBadRequestWithErrorMessage()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = "null",
+            LastName = "null",
+            Email = "admin@calories-tracker.com"
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/admin")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("User already exists", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task RegisterAdministrator_WhenUserIsSuccessfullyCreated_ReturnsUserProfile()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = "phoebe",
+            LastName = "buffet",
+            Email = "phoebe.buffet@smellycat.com"
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/admin")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        UserProfile? user = JsonConvert.DeserializeObject<UserProfile>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(user);
+        Assert.Equal(model.FirstName, user.FirstName);
+        Assert.NotNull(user.Role);
+        Assert.Equal(nameof(Roles.Administrator), user.Role);
+    }
+    
     private async Task<string> SignInAsync(string role)
     {
         AuthenticationRequest model = new();

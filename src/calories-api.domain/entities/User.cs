@@ -23,7 +23,7 @@ public class User : IdentityUser<Guid>
         };
     }
 
-    public UserProfile ToUserProfile()
+    public UserProfile ToUserProfile(string role)
     {
         return new()
         {
@@ -33,7 +33,8 @@ public class User : IdentityUser<Guid>
             Username = UserName,
             Email = Email,
             ExpectedNumberOfCaloriesPerDay = ExpectedNumberOfCaloriesPerDay,
-            IsCalorieDeficient = IsCaloriesDeficient
+            IsCalorieDeficient = IsCaloriesDeficient,
+            Role = role
         };
     }
 }
