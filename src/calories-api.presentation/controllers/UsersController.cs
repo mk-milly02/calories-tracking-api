@@ -1,4 +1,5 @@
-﻿using calories_api.domain;
+﻿using System.Net;
+using calories_api.domain;
 using calories_api.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,11 +21,12 @@ public class UsersController : ControllerBase
     /// Gets user by id
     /// </summary>
     /// <param name="id">User id</param>
-    /// <returns>The users profile</returns>
+    /// <returns>The user's profile</returns>
     /// api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
     [HttpGet("{id}")]
     [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
+    [ProducesResponseType(403)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetUserById(Guid id)
     {
@@ -35,9 +37,10 @@ public class UsersController : ControllerBase
     [HttpGet] // api/users?page=1&size=10
     [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(200, Type = typeof(IEnumerable<UserProfile>))]
-    public IActionResult GetAllUsers([FromQuery] PagingFilter query)
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> GetAllUsers([FromQuery] PagingFilter query)
     {
-        return Ok(_userService.GetAllUsers(query));
+        return ModelState.IsValid ? Ok(await _userService.GetAllUsers(query)) : BadRequest(ModelState);
     }
 
     /// <summary>
@@ -78,7 +81,13 @@ public class UsersController : ControllerBase
         return response is null ? Unauthorized("Invalid sign in credentials") : Ok(response);
     }
 
-    [HttpPost("register/user")] // api/users/register/user
+    /// <summary>
+    /// Allows and administrator or a user manager to create an account for a regular user
+    /// </summary>
+    /// <param name="request">Create user request</param>
+    /// <returns>A user profile</returns>
+    /// api/users/register/user
+    [HttpPost("register/user")]
     [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(400)]
     [ProducesResponseType(403)]

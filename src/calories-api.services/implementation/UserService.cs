@@ -24,14 +24,17 @@ public class UserService : IUserService
         return result.Succeeded;
     }
 
-    public IEnumerable<UserProfile> GetAllUsers(PagingFilter query)
+    public async Task<IEnumerable<UserProfile>> GetAllUsers(PagingFilter query)
     {
         List<UserProfile> profiles = new();
         IEnumerable<User> users = _userManager.Users.ToList();
 
         foreach (User user in users)
         {
-            profiles.Add(user.ToUserProfile());
+            UserProfile profile = user.ToUserProfile();
+            IList<string> roles = await _userManager.GetRolesAsync(user);
+            profile.Role = roles.FirstOrDefault();
+            profiles.Add(profile);
         }
 
         return profiles.Skip((query.Page - 1) * query.Size).Take(query.Size);
@@ -40,7 +43,16 @@ public class UserService : IUserService
     public async Task<UserProfile?> GetUserByIdAsync(Guid userId)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
-        return user?.ToUserProfile();
+
+        if (user is not null)
+        {
+            IList<string> roles = await _userManager.GetRolesAsync(user);
+            UserProfile profile = user.ToUserProfile();
+            profile.Role = roles.FirstOrDefault();
+            return profile;
+        }
+
+        return null;
     }
 
     public async Task<UserProfile?> UpdateUserAsync(Guid userId, UpdateUserRequest request)

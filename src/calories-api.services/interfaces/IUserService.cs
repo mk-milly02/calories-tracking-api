@@ -11,7 +11,7 @@ public interface IUserService
     Task<UserProfile?> CreateUserManagerAsync(CreateUserRequest request);
     Task<UserProfile?> CreateAdministratorAsync(CreateUserRequest request);
     Task<UserProfile?> GetUserByIdAsync(Guid userId);
-    IEnumerable<UserProfile> GetAllUsers(PagingFilter query);
+    Task<IEnumerable<UserProfile>> GetAllUsers(PagingFilter query);
     Task<UserProfile?> UpdateUserAsync(Guid userId, UpdateUserRequest request);
     Task<bool?> RemoveUserAsync(Guid userId);
     Task CheckForCalorieDeficiencyAsync(Guid userId);

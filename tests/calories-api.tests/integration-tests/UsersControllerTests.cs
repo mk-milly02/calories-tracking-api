@@ -185,7 +185,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignIn("user")}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("user")}");
 
         // When
         HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -211,7 +211,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignIn(role)}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync(role)}");
 
         // When
         HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -237,7 +237,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignIn(role)}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync(role)}");
 
         // When
         HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -262,7 +262,7 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignIn("administrator")}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
 
         // When
         HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -276,7 +276,97 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         Assert.Equal(nameof(Roles.RegularUser), user.Role);
     }
 
-    private async Task<string> SignIn(string role)
+    [Fact]
+    public async Task GetUserById_WhenUserDoesNotHavePermission_ReturnsForbidden()
+    {
+        // Given
+        Guid userId = Guid.NewGuid();
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"api/users/{userId}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("user")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserById_WhenUserDoesNotExist_ReturnsNotFoundWithMessage()
+    {
+        // Given
+        Guid userId = Guid.NewGuid();
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"api/users/{userId}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("Invalid user id", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task GetUserById_WhenUserDoesExist_ReturnsOkWithUserProfile()
+    {
+        // Given
+        UserProfile? user = await GetUserProfileAsync();
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"api/users/{user!.UserId}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        UserProfile? profile = JsonConvert.DeserializeObject<UserProfile>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(profile);
+        Assert.Equal(user.Email, profile.Email);
+        Assert.NotNull(profile.Role);
+        Assert.True(profile.Role.Equals(nameof(Roles.RegularUser)));
+    }
+
+    [Fact]
+    public async Task GetAllUsers_WhenModelIsInValid_ReturnsBadRequestWithErrors()
+    {
+        // Given
+        PagingFilter query = new() { Page = 0, Size = 0 };
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"api/users?page={query.Page}&size={query.Size}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+    
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+    
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAllUsers_WhenModelIsValid_ReturnsOkWithUserProfiles()
+    {
+        // Given
+        PagingFilter query = new() { Page = 1, Size = 10 };
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"api/users?page={query.Page}&size={query.Size}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+    
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+    
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        IEnumerable<UserProfile>? profiles = JsonConvert.DeserializeObject<IEnumerable<UserProfile>>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(profiles);
+        Assert.Equal(3, profiles.Count());
+        Assert.NotNull(profiles.First().Role);
+    }
+
+    private async Task<string> SignInAsync(string role)
     {
         AuthenticationRequest model = new();
 
@@ -306,5 +396,19 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         HttpResponseMessage response = await _httpClient.SendAsync(request);
         AuthenticationResponse authentication = JsonConvert.DeserializeObject<AuthenticationResponse>(await response.Content.ReadAsStringAsync())!;
         return authentication.Token!;
+    }
+
+    private async Task<UserProfile?> GetUserProfileAsync()
+    {
+        PagingFilter query = new() { Page = 1, Size = 10 };
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"api/users?page={query.Page}&size={query.Size}");
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+    
+        IEnumerable<UserProfile>? profiles = JsonConvert.DeserializeObject<IEnumerable<UserProfile>>(await response.Content.ReadAsStringAsync());
+
+        return profiles!.SingleOrDefault(x => x.Username!.Equals("julius.pepperwood"));
     }
 }
