@@ -125,7 +125,11 @@ public class UserService : IUserService
         User user = request.ToUser();
         IdentityResult result = await _userManager.CreateAsync(user);
         await _userManager.AddToRoleAsync(user, Roles.UserManager.ToString());
-        return result.Succeeded ? user.ToUserProfile() : null;
+
+        UserProfile profile = user.ToUserProfile();
+        profile.Role = nameof(Roles.UserManager);
+        
+        return result.Succeeded ? profile : null;
     }
 
     public async Task<UserProfile?> CreateAdministratorAsync(CreateUserRequest request)

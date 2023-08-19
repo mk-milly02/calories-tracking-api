@@ -1,5 +1,4 @@
-﻿using System.Net;
-using calories_api.domain;
+﻿using calories_api.domain;
 using calories_api.services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,7 +33,13 @@ public class UsersController : ControllerBase
         return user is null ? NotFound("Invalid user id") : Ok(user);
     }
 
-    [HttpGet] // api/users?page=1&size=10
+    /// <summary>
+    /// Gets all users
+    /// </summary>
+    /// <param name="query">Query parameter for pagination</param>
+    /// <returns>All users</returns>
+    /// api/users?page=1&size=10
+    [HttpGet]
     [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(200, Type = typeof(IEnumerable<UserProfile>))]
     [ProducesResponseType(403)]
@@ -101,9 +106,16 @@ public class UsersController : ControllerBase
         return userProfile is null ? BadRequest("Repository failed to create user") : Ok(userProfile);
     }
 
-    [HttpPost("register/manager")] // api/users/register/manager
+    /// <summary>
+    /// Allows the administrator to create an account for a user managers
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    /// api/users/register/manager
+    [HttpPost("register/manager")]
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     public async Task<IActionResult> RegisterUserManager([FromBody] CreateUserRequest request)
     {

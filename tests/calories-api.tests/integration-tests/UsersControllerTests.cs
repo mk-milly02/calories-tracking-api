@@ -366,6 +366,84 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         Assert.NotNull(profiles.First().Role);
     }
 
+    [Fact]
+    public async Task RegisterUserManager_WhenCreateUserRequestModelIsNotValid_ReturnsBadRequestWithErrors()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = null,
+            LastName = null,
+            Email = null
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/manager")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegisterUserManager_WhenUserEmailAlreadyExists_ReturnsBadRequestWithErrorMessage()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = "null",
+            LastName = "null",
+            Email = "manager@calories-tracker.com"
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/manager")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("User already exists", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task RegisterUserManager_WhenUserIsSuccessfullyCreated_ReturnsUserProfile()
+    {
+        // Given
+        CreateUserRequest model = new()
+        {
+            FirstName = "andy",
+            LastName = "bernard",
+            Email = "nard.dog@torn-scrotum.com"
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/manager")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        UserProfile? user = JsonConvert.DeserializeObject<UserProfile>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(user);
+        Assert.Equal(model.FirstName, user.FirstName);
+        Assert.NotNull(user.Role);
+        Assert.Equal(nameof(Roles.UserManager), user.Role);
+    }
+    
     private async Task<string> SignInAsync(string role)
     {
         AuthenticationRequest model = new();
