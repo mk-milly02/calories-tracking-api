@@ -522,6 +522,49 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         Assert.Equal(nameof(Roles.Administrator), user.Role);
     }
     
+    [Fact]
+    public async Task UpdateUser_WhenUpdateUserRequestIsInvalid_ReturnsBadRequestWithErrors()
+    {
+        // Given
+        UpdateUserRequest model = new() { FirstName = null, LastName = null, Username = null };
+
+        HttpRequestMessage request = new(HttpMethod.Put, $"api/users/{Guid.NewGuid()}")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("user")}");
+    
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+    
+        // Then
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateUser_WhenUserIsSuccessfullyUpdated_ReturnsOkWithUserProfile()
+    {
+        // Given
+        UpdateUserRequest model = new() { FirstName = "nick", LastName = "miller", Username = "julius.pepperwood" };
+        UserProfile? profile = await GetUserProfileAsync();
+
+        HttpRequestMessage request = new(HttpMethod.Put, $"api/users/{profile!.UserId}")
+        {
+            Content = JsonContent.Create(model)
+        };
+        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("manager")}");
+    
+        // When
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+    
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        UserProfile? updatedProfile = JsonConvert.DeserializeObject<UserProfile?>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(updatedProfile);
+        Assert.NotEqual("pepperwood", updatedProfile.LastName);
+        Assert.Equal(profile.Username, updatedProfile.Username);
+    }
+
     private async Task<string> SignInAsync(string role)
     {
         AuthenticationRequest model = new();

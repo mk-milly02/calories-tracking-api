@@ -129,6 +129,7 @@ public class UsersController : ControllerBase
     [HttpPost("register/admin")] // api/users/register/admin
     [Authorize(Policy = "MustBeAnAdministrator")]
     [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     public async Task<IActionResult> RegisterAdministrator([FromBody] CreateUserRequest request)
     {
@@ -140,8 +141,8 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")] // api/users/e48c46a6-2287-468b-8abc-9ae4ab75e7b6
-    [Authorize(Policy = "MustBeAnAdministratorOrAUserManager")]
     [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
     [ProducesResponseType(200, Type = typeof(UserProfile))]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request, Guid id)
     {

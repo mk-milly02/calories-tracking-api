@@ -59,4 +59,28 @@ public class UsersControllerUnitTests
         BadRequestObjectResult result = Assert.IsAssignableFrom<BadRequestObjectResult>(actual);
         Assert.Equal("Repository failed to create user", result.Value);
     }
+
+    [Fact]
+    public async Task UpdateUser_WhenRepositoryFailsToUpdateUser_ReturnsBadRequwstWithErroeMessage()
+    {
+        // Given
+        UpdateUserRequest request = new() 
+        {
+            FirstName = "fName",
+            LastName = "lName",
+            Username = "username"
+        };
+
+        UserProfile? response = null;
+
+        _userServiceMock.Setup(x => x.UpdateUserAsync(It.IsAny<Guid>(), It.IsAny<UpdateUserRequest>())).ReturnsAsync(response);
+        _controller = new UsersController(_userServiceMock.Object);
+    
+        // When
+        IActionResult actual = await _controller.UpdateUser(request, Guid.NewGuid());
+    
+        // Then
+        BadRequestObjectResult result = Assert.IsAssignableFrom<BadRequestObjectResult>(actual);
+        Assert.Equal("Repository failed to update user", result.Value);
+    }
 }

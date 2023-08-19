@@ -12,14 +12,4 @@ public class UpdateUserRequest
 
     [Required(ErrorMessage = "Username is required")]
     public string? Username { get; set; }
-
-    public User ToUser()
-    {
-        return new()
-        {
-            FirstName = FirstName,
-            LastName = LastName,
-            UserName = Username
-        };
-    }
 }

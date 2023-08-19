@@ -59,7 +59,10 @@ public class UserService : IUserService
 
         if (user is null) return null;
 
-        user = request.ToUser();
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
+        user.UserName = request.Username;
+        
         IdentityResult result = await _userManager.UpdateAsync(user);
 
         if (result.Succeeded)
