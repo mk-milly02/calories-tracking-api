@@ -1,3 +1,4 @@
+using System.Reflection;
 using calories_api.services;
 using Microsoft.OpenApi.Models;
 
@@ -53,6 +54,9 @@ builder.Services.AddSwaggerGen(s =>
             Array.Empty<string>()
         }
     });
+
+    string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    s.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFile));
 });
 
 var app = builder.Build();
@@ -76,4 +80,7 @@ app.SeedIdentityUsers();
 
 app.Run();
 
+/// <summary>
+/// Entry point
+/// </summary>
 public partial class Program { }
