@@ -1,246 +1,89 @@
 ﻿namespace calories_api.tests;
 
-public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class UsersControllerTests
 {
-    private readonly CustomWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
-
-    public UsersControllerTests(CustomWebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-        _httpClient = _factory.CreateDefaultClient(new Uri("https://localhost:7213"));
-        _configuration = _factory.Services.GetRequiredService<IConfiguration>();
-    }
-
-    [Theory]
-    [InlineData(null, null, null, null, null)]
-    [InlineData("test", "project", "test.project", "94bentley", "null")]
-    public async Task SignUp_WhenUserRegistrationRequestModelIsNotValid_ReturnBadRequestWithErrors(string fName, string lName, string uName, string password, string email)
-    {
-        // Given
-        UserRegistrationRequest model = new() 
-        {
-            FirstName = fName,
-            LastName = lName,
-            Username = uName,
-            Password = password,
-            Email = email
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
-        {
-            Content = JsonContent.Create(model)
-        };
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Theory]
-    [InlineData("admin@calories-tracker.com")]
-    [InlineData("jp@theloft.com")]
-    [InlineData("manager@calories-tracker.com")]
-    public async Task SignUp_WhenEmailAlreadyExists_ReturnBadRequestWithErrorMessage(string email)
-    {
-        // Given
-        UserRegistrationRequest model = new() 
-        {
-            FirstName = "fName",
-            LastName = "lName",
-            Username = "uName",
-            Password = "password",
-            Email = email
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
-        {
-            Content = JsonContent.Create(model)
-        };
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("User already exists", await response.Content.ReadAsStringAsync());
-    }
-
     [Fact]
-    public async Task SignUp_WhenRepositorySuccessfullyCreatesUserAccount_ReturnCreatedWithUserProfile()
+    public async Task CreateUser_WhenCurrentUserDoesNotHavePermission_ReturnsForbidden()
     {
         // Given
-        UserRegistrationRequest model = new() 
-        {
-            FirstName = "imagine",
-            LastName = "dragons",
-            Username = "imagine.dragons",
-            Password = "selene",
-            Email = "mercury@act.com"
-        };
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
 
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register")
-        {
-            Content = JsonContent.Create(model)
-        };
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    }
-
-    [Theory]
-    [InlineData(null, null)]
-    [InlineData("test", "project")]
-    public async Task SignIn_WhenAuthenticationRequestModelIsNotValid_ReturnBadRequestWithErrors(string email, string password)
-    {
-        // Given
-        AuthenticationRequest model = new() 
-        {
-            Password = password,
-            Email = email
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
-        {
-            Content = JsonContent.Create(model)
-        };
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Theory]
-    [InlineData("admin@calories-tracker.com", "1234")]
-    [InlineData("jp@theloft.com", "qwerty")]
-    [InlineData("manager@calories-tracker.com", "hTtp$://")]
-    public async Task SignIn_WhenSignInCredentialsAreInvalid_ReturnBadRequestWithErrorMessage(string email, string password)
-    {
-        // Given
-        AuthenticationRequest model = new() 
-        {
-            Password = password,
-            Email = email
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
-        {
-            Content = JsonContent.Create(model)
-        };
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Equal("Invalid sign in credentials", await response.Content.ReadAsStringAsync());
-    }
-
-    [Fact]
-    public async Task SignIn_WhenUserIsSuccessfullyAuthenticated_ReturnOkWithAuthenticationResponse()
-    {
-        // Given
-        
-        AuthenticationRequest model = new() 
-        {
-            Password = _configuration["Identity:RegularUser:Password"],
-            Email = _configuration["Identity:RegularUser:Email"]
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
-        {
-            Content = JsonContent.Create(model)
-        };
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        AuthenticationResponse? authentication = JsonConvert.DeserializeObject<AuthenticationResponse>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(authentication);
-        Assert.NotNull(authentication.Token);
-    }
-
-    [Fact]
-    public async Task RegisterRegularUser_WhenUserDoesNotHavePermission_ReturnsForbidden()
-    {
-        // Given
         CreateUserRequest model = new()
         {
             FirstName = null,
             LastName = null,
+            Password = null,
+            Role = null,
             Email = null
         };
 
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users")
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("user")}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("regular")}");
 
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
 
         // Then
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    [Theory]
-    [InlineData("manager")]
-    [InlineData("administrator")]
-    public async Task RegisterRegularUser_WhenCreateUserRequestModelIsNotValid_ReturnsBadRequestWithErrors(string role)
+    [Fact]
+    public async Task CreateUser_WhenCreateCurrentUserRequestModelIsInvalid_ReturnsBadRequestWithErrors()
     {
         // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
         CreateUserRequest model = new()
         {
-            FirstName = null,
-            LastName = null,
-            Email = null
+            FirstName = "null",
+            LastName = "null",
+            Password = "null.12345",
+            Role = "null",
+            Email = "null@gmail.com"
         };
 
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users")
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync(role)}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
 
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    [Theory]
-    [InlineData("manager")]
-    [InlineData("administrator")]
-    public async Task RegisterRegularUser_WhenUserEmailAlreadyExists_ReturnsBadRequestWithErrorMessage(string role)
+    [Fact]
+    public async Task CreateUser_WhenNewUserEmailAlreadyExists_ReturnsBadRequestWithErrorMessage()
     {
         // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
         CreateUserRequest model = new()
         {
             FirstName = "null",
             LastName = "null",
-            Email = "jp@theloft.com"
+            Email = "jp@theloft.com",
+            Password = "12345678$",
+            Role = nameof(Roles.Administrator)
         };
 
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users")
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync(role)}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
 
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -248,24 +91,29 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     }
 
     [Fact]
-    public async Task RegisterRegularUser_WhenUserIsSuccessfullyCreated_ReturnsUserProfile()
+    public async Task CreateUser_WhenNewUserIsSuccessfullyCreated_ReturnsUserProfile()
     {
         // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
         CreateUserRequest model = new()
         {
             FirstName = "jim",
             LastName = "halpert",
-            Email = "jim@athelead.com"
+            Email = "jim@athelead.com",
+            Password = "long/$jim99@",
+            Role = nameof(Roles.RegularUser)
         };
 
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/user")
+        HttpRequestMessage request = new(HttpMethod.Post, "api/users")
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
 
         // Then
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -280,13 +128,16 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     public async Task GetUserById_WhenUserDoesNotHavePermission_ReturnsForbidden()
     {
         // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
         Guid userId = Guid.NewGuid();
 
         HttpRequestMessage request = new(HttpMethod.Get, $"api/users/{userId}");
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("user")}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("regular")}");
 
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
 
         // Then
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -296,13 +147,16 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     public async Task GetUserById_WhenUserDoesNotExist_ReturnsNotFoundWithMessage()
     {
         // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
         Guid userId = Guid.NewGuid();
 
         HttpRequestMessage request = new(HttpMethod.Get, $"api/users/{userId}");
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("admin")}");
 
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
 
         // Then
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -313,13 +167,16 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     public async Task GetUserById_WhenUserDoesExist_ReturnsOkWithUserProfile()
     {
         // Given
-        UserProfile? user = await GetUserProfileAsync();
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
+        UserProfile? user = await factory.GetUserProfileAsync();
 
         HttpRequestMessage request = new(HttpMethod.Get, $"api/users/{user!.UserId}");
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("admin")}");
 
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
 
         // Then
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -334,13 +191,16 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     public async Task GetAllUsers_WhenModelIsInValid_ReturnsBadRequestWithErrors()
     {
         // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
         PagingFilter query = new() { Page = 0, Size = 0 };
 
         HttpRequestMessage request = new(HttpMethod.Get, $"api/users?page={query.Page}&size={query.Size}");
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
     
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
     
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -350,13 +210,16 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     public async Task GetAllUsers_WhenModelIsValid_ReturnsOkWithUserProfiles()
     {
         // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
         PagingFilter query = new() { Page = 1, Size = 10 };
 
         HttpRequestMessage request = new(HttpMethod.Get, $"api/users?page={query.Page}&size={query.Size}");
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
     
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpResponseMessage response = await httpClient.SendAsync(request);
     
         // Then
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -367,247 +230,158 @@ public class UsersControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     }
 
     [Fact]
-    public async Task RegisterUserManager_WhenCreateUserRequestModelIsNotValid_ReturnsBadRequestWithErrors()
+    public async Task UpdateUser_WhenUserDoesNotHavePermission_ReturnsForbidden()
     {
         // Given
-        CreateUserRequest model = new()
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
+        UpdateUserRequest model = new()
         {
             FirstName = null,
             LastName = null,
-            Email = null
+            Username = null,
+            ExpectedNumberOfCaloriesPerDay = 0,
+            IsCaloriesDeficient = false
         };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/manager")
-        {
-            Content = JsonContent.Create(model)
-        };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task RegisterUserManager_WhenUserEmailAlreadyExists_ReturnsBadRequestWithErrorMessage()
-    {
-        // Given
-        CreateUserRequest model = new()
-        {
-            FirstName = "null",
-            LastName = "null",
-            Email = "manager@calories-tracker.com"
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/manager")
-        {
-            Content = JsonContent.Create(model)
-        };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("User already exists", await response.Content.ReadAsStringAsync());
-    }
-
-    [Fact]
-    public async Task RegisterUserManager_WhenUserIsSuccessfullyCreated_ReturnsUserProfile()
-    {
-        // Given
-        CreateUserRequest model = new()
-        {
-            FirstName = "andy",
-            LastName = "bernard",
-            Email = "nard.dog@torn-scrotum.com"
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/manager")
-        {
-            Content = JsonContent.Create(model)
-        };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        UserProfile? user = JsonConvert.DeserializeObject<UserProfile>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(user);
-        Assert.Equal(model.FirstName, user.FirstName);
-        Assert.NotNull(user.Role);
-        Assert.Equal(nameof(Roles.UserManager), user.Role);
-    }
-    
-    [Fact]
-    public async Task RegisterAdministrator_WhenCreateUserRequestModelIsNotValid_ReturnsBadRequestWithErrors()
-    {
-        // Given
-        CreateUserRequest model = new()
-        {
-            FirstName = null,
-            LastName = null,
-            Email = null
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/admin")
-        {
-            Content = JsonContent.Create(model)
-        };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task RegisterAdministrator_WhenUserEmailAlreadyExists_ReturnsBadRequestWithErrorMessage()
-    {
-        // Given
-        CreateUserRequest model = new()
-        {
-            FirstName = "null",
-            LastName = "null",
-            Email = "admin@calories-tracker.com"
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/admin")
-        {
-            Content = JsonContent.Create(model)
-        };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("User already exists", await response.Content.ReadAsStringAsync());
-    }
-
-    [Fact]
-    public async Task RegisterAdministrator_WhenUserIsSuccessfullyCreated_ReturnsUserProfile()
-    {
-        // Given
-        CreateUserRequest model = new()
-        {
-            FirstName = "phoebe",
-            LastName = "buffet",
-            Email = "phoebe.buffet@smellycat.com"
-        };
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/register/admin")
-        {
-            Content = JsonContent.Create(model)
-        };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
-
-        // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-        // Then
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        UserProfile? user = JsonConvert.DeserializeObject<UserProfile>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(user);
-        Assert.Equal(model.FirstName, user.FirstName);
-        Assert.NotNull(user.Role);
-        Assert.Equal(nameof(Roles.Administrator), user.Role);
-    }
-    
-    [Fact]
-    public async Task UpdateUser_WhenUpdateUserRequestIsInvalid_ReturnsBadRequestWithErrors()
-    {
-        // Given
-        UpdateUserRequest model = new() { FirstName = null, LastName = null, Username = null };
 
         HttpRequestMessage request = new(HttpMethod.Put, $"api/users/{Guid.NewGuid()}")
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("user")}");
-    
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("regular")}");
+
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-    
+        HttpResponseMessage response = await httpClient.SendAsync(request);
+
+        // Then
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateUser_WhenUserRequestModelIsInvalid_ReturnsBadRequestWithErrors()
+    {
+        // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
+        UpdateUserRequest model = new()
+        {
+            FirstName = null,
+            LastName = null,
+            Username = null,
+            ExpectedNumberOfCaloriesPerDay = -1,
+            IsCaloriesDeficient = false
+        };
+
+        Guid userId = Guid.NewGuid();
+
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
+
+        // When
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/users/{userId}", model);
+
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public async Task UpdateUser_WhenUserIsSuccessfullyUpdated_ReturnsOkWithUserProfile()
+    public async Task UpdateUser_WhenUserDoesNotExist_ReturnsNotFoundWithErrorMessage()
     {
         // Given
-        UpdateUserRequest model = new() { FirstName = "nick", LastName = "miller", Username = "julius.pepperwood" };
-        UserProfile? profile = await GetUserProfileAsync();
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
 
-        HttpRequestMessage request = new(HttpMethod.Put, $"api/users/{profile!.UserId}")
+        UpdateUserRequest model = new()
+        {
+            FirstName = "nullandvoid",
+            LastName = "nullandvoid",
+            Username = "nulldnad",
+            ExpectedNumberOfCaloriesPerDay = 100,
+            IsCaloriesDeficient = false
+        };
+
+        Guid userId = Guid.NewGuid();
+
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
+
+        // When
+        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/users/{userId}", model);
+
+        // Then
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("User does not exist", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task UpdateUser_WhenRepositorySuccessfullyUpdatesUser_ReturnsOkWithUpdatedUserProfile()
+    {
+        // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
+        UserProfile? user = await factory.GetUserProfileAsync();
+
+        UpdateUserRequest model = new()
+        {
+            FirstName = "scott",
+            LastName = "mcall",
+            Username = "scott.mcall",
+            ExpectedNumberOfCaloriesPerDay = 135,
+            IsCaloriesDeficient = false
+        };
+
+        HttpRequestMessage request = new(HttpMethod.Put, $"api/users/{user!.UserId}")
         {
             Content = JsonContent.Create(model)
         };
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("manager")}");
-    
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
+
         // When
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-    
+        HttpResponseMessage response = await httpClient.SendAsync(request);
+
         // Then
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        UserProfile? updatedProfile = JsonConvert.DeserializeObject<UserProfile?>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(updatedProfile);
-        Assert.NotEqual("pepperwood", updatedProfile.LastName);
-        Assert.Equal(profile.Username, updatedProfile.Username);
+        UserProfile? profile = JsonConvert.DeserializeObject<UserProfile?>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(profile);
+        Assert.Equal(135, profile.ExpectedNumberOfCaloriesPerDay);
+        Assert.False(profile.LastName!.Equals(user.LastName));
     }
 
-    private async Task<string> SignInAsync(string role)
+    [Fact]
+    public async Task DeleteUser_WhenUserDoesNotExist_ReturnNotFoundWithErrorMessage()
     {
-        AuthenticationRequest model = new();
+        // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
 
-        switch (role)
-        {
-            case "administrator":
-                model.Email = _configuration["Identity:Administrator:Email"];
-                model.Password = _configuration["Identity:Administrator:Password"];
-                break;
-            case "manager":
-                model.Email = _configuration["Identity:UserManager:Email"];
-                model.Password = _configuration["Identity:UserManager:Password"];
-                break;
-            case "user":
-                model.Email = _configuration["Identity:RegularUser:Email"];
-                model.Password = _configuration["Identity:RegularUser:Password"];
-                break;
-            default:
-                break;
-        }
-
-        HttpRequestMessage request = new(HttpMethod.Post, "api/users/sign-in")
-        {
-            Content = JsonContent.Create(model)
-        };
-
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-        AuthenticationResponse authentication = JsonConvert.DeserializeObject<AuthenticationResponse>(await response.Content.ReadAsStringAsync())!;
-        return authentication.Token!;
-    }
-
-    private async Task<UserProfile?> GetUserProfileAsync()
-    {
-        PagingFilter query = new() { Page = 1, Size = 10 };
-
-        HttpRequestMessage request = new(HttpMethod.Get, $"api/users?page={query.Page}&size={query.Size}");
-        request.Headers.Add("Authorization", $"Bearer {await SignInAsync("administrator")}");
-
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        HttpRequestMessage request = new(HttpMethod.Delete, $"api/users/{Guid.NewGuid()}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
     
-        IEnumerable<UserProfile>? profiles = JsonConvert.DeserializeObject<IEnumerable<UserProfile>>(await response.Content.ReadAsStringAsync());
+        // When
+        HttpResponseMessage response = await httpClient.SendAsync(request);
+    
+        // Then
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("User does not exist", await response.Content.ReadAsStringAsync());
+    }
 
-        return profiles!.SingleOrDefault(x => x.Username!.Equals("julius.pepperwood"));
+    [Fact]
+    public async Task DeleteUser_WhenRepositorySuccessfullyDeletesUser_ReturnNoContent()
+    {
+        // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
+        UserProfile? user = await factory.GetUserProfileAsync();
+
+        HttpRequestMessage request = new(HttpMethod.Delete, $"api/users/{user!.UserId}");
+        request.Headers.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
+    
+        // When
+        HttpResponseMessage response = await httpClient.SendAsync(request);
+    
+        // Then
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 }

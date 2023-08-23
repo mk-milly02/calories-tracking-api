@@ -20,6 +20,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             ApplicationDbContext dbContext = services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>();
             RoleManager<Role> manager = services.BuildServiceProvider().GetRequiredService<RoleManager<Role>>();
 
+            //reset database to isolate tests
             await dbContext.Database.EnsureDeletedAsync();
             await dbContext.Database.EnsureCreatedAsync();
 
@@ -27,5 +28,46 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             await manager.CreateAsync(new() { Id = Guid.NewGuid(), Name = nameof(Roles.UserManager), NormalizedName = nameof(Roles.UserManager).ToUpper() });
             await manager.CreateAsync(new() { Id = Guid.NewGuid(), Name = nameof(Roles.Administrator), NormalizedName = nameof(Roles.Administrator).ToUpper() });
         });
+    }
+
+    public async Task<string> GenerateUserTokenAsync(string role)
+    {
+        using IServiceScope services = Services.CreateScope();
+        UserManager<User> userManager = services.ServiceProvider.GetRequiredService<UserManager<User>>();
+        IConfiguration configuration = services.ServiceProvider.GetRequiredService<IConfiguration>();
+        ITokenService tokenService = services.ServiceProvider.GetRequiredService<ITokenService>();
+
+        User? user = new();
+
+        switch (role)
+        {
+            case "regular":
+                user = await userManager.FindByEmailAsync(configuration["Identity:RegularUser:Email"]!);
+                break;
+            case "manager":
+                user = await userManager.FindByEmailAsync(configuration["Identity:UserManager:Email"]!);
+                break;
+            case "admin":
+                user = await userManager.FindByEmailAsync(configuration["Identity:Administrator:Email"]!);
+                break;
+            default:
+                break;
+        }
+    
+        Assert.NotNull(user);
+        AuthenticationResponse response = await tokenService.GenerateTokenAsync(user);
+        Assert.NotNull(response.Token);
+        return response.Token;
+    }
+
+    public async Task<UserProfile?> GetUserProfileAsync()
+    {
+        using IServiceScope services = Services.CreateScope();
+        UserManager<User> userManager = services.ServiceProvider.GetRequiredService<UserManager<User>>();
+        IConfiguration configuration = services.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        User? user = await userManager.FindByEmailAsync(configuration["Identity:RegularUser:Email"]!);
+        Assert.NotNull(user);
+        return user.ToUserProfile(nameof(Roles.RegularUser));
     }
 }

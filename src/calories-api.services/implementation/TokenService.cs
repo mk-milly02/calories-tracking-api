@@ -42,8 +42,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName!),
             new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-            new Claim(ClaimTypes.Role, userRoles.First()),
-            new Claim("test", "testing")
+            new Claim(ClaimTypes.Role, userRoles.First())
         };
 
         JwtSecurityToken securityToken = new(issuer,

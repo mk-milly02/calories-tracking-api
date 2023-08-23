@@ -19,6 +19,7 @@ public static class DependencyInjectionExtensions
         services.AddHttpClient<IMealService, MealService>();
 
         services.AddScoped<IMealRepository, MealRepository>();
+        
         services.AddTransient<IMealService, MealService>();
         services.AddTransient<ITokenService, TokenService>();
         services.AddTransient<IUserService, UserService>();
