@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Diagnostics;
-
-namespace calories_tracking.tests;
+﻿namespace calories_tracking.tests;
 
 public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
 {
@@ -15,21 +13,15 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             //find the registered application dbcontext that uses PostgreSQL and remove it
             ServiceDescriptor? service = services.SingleOrDefault(x => x.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
             if (service is not null) services.Remove(service);
-            
-            //register application dbcontext which uses in memory database for testing purposes
-            services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase("CaloriesTrackerTestsDB"));
+
+            //register application dbcontext which uses in memory database for testing
+            services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase("CaloriesTrackerTestDatabase"));
 
             ApplicationDbContext dbContext = services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>();
-            RoleManager<Role> manager = services.BuildServiceProvider().GetRequiredService<RoleManager<Role>>();
 
             //reset database to isolate tests
             await dbContext.Database.EnsureDeletedAsync();
             await dbContext.Database.EnsureCreatedAsync();
-
-            //seed roles
-            await manager.CreateAsync(new() { Id = Guid.NewGuid(), Name = nameof(Roles.RegularUser), NormalizedName = nameof(Roles.RegularUser).ToUpper() });
-            await manager.CreateAsync(new() { Id = Guid.NewGuid(), Name = nameof(Roles.UserManager), NormalizedName = nameof(Roles.UserManager).ToUpper() });
-            await manager.CreateAsync(new() { Id = Guid.NewGuid(), Name = nameof(Roles.Administrator), NormalizedName = nameof(Roles.Administrator).ToUpper() });
         });
     }
 
@@ -56,7 +48,7 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             default:
                 break;
         }
-    
+
         Assert.NotNull(user);
         AuthenticationResponse response = await tokenService.GenerateTokenAsync(user);
         Assert.NotNull(response.Token);
@@ -72,5 +64,20 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
         User? user = await userManager.FindByEmailAsync(configuration["Identity:RegularUser:Email"]!);
         Assert.NotNull(user);
         return user.ToUserProfile(nameof(Roles.RegularUser));
+    }
+
+    public async Task AddMealsAsync(Guid userId)
+    {
+        using IServiceScope services = Services.CreateScope();
+        IMealService mealService = services.ServiceProvider.GetRequiredService<IMealService>();
+
+        Fixture fixture = new();
+        IEnumerable<CreateMealRequest> meals = fixture.CreateMany<CreateMealRequest>(5);
+
+        foreach (CreateMealRequest meal in meals)
+        {
+            meal.UserId = userId;
+            await mealService.AddMealAsync(meal);
+        }
     }
 }

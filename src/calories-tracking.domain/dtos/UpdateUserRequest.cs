@@ -8,7 +8,7 @@ public class UpdateUserRequest
     public string? FirstName { get; set; }
 
     [Required(ErrorMessage = "LastName is required")]
-    public string? LastName { get; set;}
+    public string? LastName { get; set; }
 
     [Required(ErrorMessage = "Username is required")]
     public string? Username { get; set; }

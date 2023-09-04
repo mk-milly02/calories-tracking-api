@@ -19,18 +19,18 @@ public class UserService : IUserService
     public async Task<UserActionResponse> RemoveUserAsync(Guid userId)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
-        if (user is null) 
-        { 
-            return new() 
-            { 
-                Succeeded = false, 
-                Error = new() 
-                { 
-                    Code = "NotFound", 
-                    Description = $"User with id:{userId} does not exist." 
-                } 
-            }; 
-        }   
+        if (user is null)
+        {
+            return new()
+            {
+                Succeeded = false,
+                Error = new()
+                {
+                    Code = "NotFound",
+                    Description = $"User with id:{userId} does not exist."
+                }
+            };
+        }
         return new(await _userManager.DeleteAsync(user!));
     }
 
@@ -70,7 +70,7 @@ public class UserService : IUserService
         user!.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.UserName = request.Username;
-        
+
         return new(await _userManager.UpdateAsync(user));
     }
 
@@ -112,7 +112,7 @@ public class UserService : IUserService
         UserRegistrationResponse response = new();
 
         if (!userCreatedResult.Succeeded) { response.Errors.AddRange(userCreatedResult.Errors); return response; }
-        
+
         await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
         response.Profile = user.ToUserProfile(nameof(Roles.RegularUser));
         return response;
@@ -128,7 +128,7 @@ public class UserService : IUserService
         UserRegistrationResponse response = new();
 
         if (!userCreatedResult.Succeeded) { response.Errors.AddRange(userCreatedResult.Errors); return response; }
-        
+
         await _userManager.AddToRoleAsync(user, request.Role!);
         response.Profile = user.ToUserProfile(request.Role!);
         return response;
@@ -138,18 +138,18 @@ public class UserService : IUserService
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
 
-        if (user is null) 
-        { 
-            return new() 
-            { 
-                Succeeded = false, 
-                Error = new() 
-                { 
-                    Code = "NotFound", 
-                    Description = $"User with id:{userId} does not exist." 
-                } 
-            }; 
-        }   
+        if (user is null)
+        {
+            return new()
+            {
+                Succeeded = false,
+                Error = new()
+                {
+                    Code = "NotFound",
+                    Description = $"User with id:{userId} does not exist."
+                }
+            };
+        }
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;

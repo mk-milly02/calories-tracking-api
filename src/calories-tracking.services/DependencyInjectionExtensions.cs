@@ -1,5 +1,5 @@
-﻿using System.Text;
-using calories_tracking.domain;
+﻿using calories_tracking.domain;
+using calories_tracking.infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using calories_tracking.infrastructure;
+using System.Text;
 
 namespace calories_tracking.services;
 
@@ -19,7 +19,7 @@ public static class DependencyInjectionExtensions
         services.AddHttpClient<IMealService, MealService>();
 
         services.AddScoped<IMealRepository, MealRepository>();
-        
+
         services.AddTransient<IMealService, MealService>();
         services.AddTransient<ITokenService, TokenService>();
         services.AddTransient<IUserService, UserService>();
@@ -29,12 +29,12 @@ public static class DependencyInjectionExtensions
     {
         IConfiguration bearer = configuration.GetRequiredSection("Authentication:Schemes:Bearer")
                                 ?? throw new NullReferenceException("Bearer scheme is not configured");
-        
-        services.AddAuthentication(options => 
+
+        services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options => 
+        }).AddJwtBearer(options =>
         {
             options.TokenValidationParameters = new()
             {
@@ -54,14 +54,14 @@ public static class DependencyInjectionExtensions
     {
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("MustBeARegularUser", policy => 
+            options.AddPolicy("MustBeARegularUser", policy =>
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
                 policy.RequireRole(new[] { nameof(Roles.RegularUser) });
             });
 
-            options.AddPolicy("MustBeAnAdministrator", policy => 
+            options.AddPolicy("MustBeAnAdministrator", policy =>
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
@@ -95,7 +95,7 @@ public static class DependencyInjectionExtensions
                                   ?? throw new NullReferenceException("Connection string is not configured");
 
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
-        services.AddIdentity<User, Role>(options => 
+        services.AddIdentity<User, Role>(options =>
         {
             options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@ ";
             options.User.RequireUniqueEmail = true;

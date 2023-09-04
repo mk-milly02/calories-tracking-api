@@ -23,7 +23,7 @@ public class MealRepository : IMealRepository
     {
         Meal? existingMeal = await _context.Meals.FindAsync(id);
 
-        if (existingMeal is null) { return null;}
+        if (existingMeal is null) { return null; }
         _context.Meals.Remove(existingMeal);
 
         return await _context.SaveChangesAsync() > 0;

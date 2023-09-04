@@ -1,5 +1,4 @@
 ﻿using calories_tracking.domain;
-using Microsoft.AspNetCore.Identity;
 
 namespace calories_tracking.services;
 

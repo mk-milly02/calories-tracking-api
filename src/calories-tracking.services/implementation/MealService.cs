@@ -1,8 +1,8 @@
-﻿using System.Net.Http.Json;
-using calories_tracking.domain;
+﻿using calories_tracking.domain;
 using calories_tracking.infrastructure;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Net.Http.Json;
 
 namespace calories_tracking.services;
 
@@ -18,10 +18,10 @@ public class MealService : IMealService
         _httpClient = httpClient;
         _configuration = configuration;
     }
-    
+
     public async Task<MealResponse?> AddMealAsync(CreateMealRequest request)
     {
-        if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
+        if (request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
 
         Meal meal = request.ToMeal();
         Meal? addedMeal = await _repository.Create(meal);
@@ -30,22 +30,22 @@ public class MealService : IMealService
 
     public async Task<MealResponse?> UpdateMealAsync(Guid id, UpdateMealRequest request)
     {
-        if(request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
-        
+        if (request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
+
         Meal meal = request.ToMeal();
         meal.Id = id;
         Meal? updatedMeal = await _repository.Update(meal);
         return updatedMeal?.ToMealResponse();
     }
 
-    public async Task<IEnumerable<MealResponse>> GetMealsAsync(QueryParameters query)
+    public async Task<IEnumerable<MealResponse>> GetMealsAsync(FiltrationQueryParameters query)
     {
         List<MealResponse> output = new();
         IEnumerable<Meal> meals = await _repository.RetrieveAll();
 
-        if(!string.IsNullOrEmpty(query.S)) 
-        { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase)); 
+        if (!string.IsNullOrEmpty(query.S))
+        {
+            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase));
         }
 
         foreach (Meal meal in meals)
@@ -56,14 +56,14 @@ public class MealService : IMealService
         return output.Skip((query.Page - 1) * query.Size).Take(query.Size);
     }
 
-    public async Task<IEnumerable<MealResponse>> GetMealsByUserAsync(Guid userId, QueryParameters query)
+    public async Task<IEnumerable<MealResponse>> GetMealsByUserAsync(Guid userId, FiltrationQueryParameters query)
     {
         List<MealResponse> output = new();
         IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
 
-        if(!string.IsNullOrEmpty(query.S)) 
-        { 
-            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase)); 
+        if (!string.IsNullOrEmpty(query.S))
+        {
+            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase));
         }
 
         foreach (Meal meal in meals)
@@ -116,13 +116,13 @@ public class MealService : IMealService
         };
 
         HttpResponseMessage response = await _httpClient.SendAsync(message);
-        
-        if(response.IsSuccessStatusCode)
+
+        if (response.IsSuccessStatusCode)
         {
             NutritionAPIObject? result = JsonConvert.DeserializeObject<NutritionAPIObject>(await response.Content.ReadAsStringAsync());
             return result!.ComputeCalories();
         }
-        
+
         return 0;
     }
 }

@@ -1,6 +1,6 @@
 using calories_tracking.services;
-using System.Reflection;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 

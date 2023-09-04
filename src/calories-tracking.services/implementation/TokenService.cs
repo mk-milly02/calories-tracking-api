@@ -1,12 +1,12 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using calories_tracking.domain;
+﻿using calories_tracking.domain;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace calories_tracking.services;
 
@@ -35,7 +35,7 @@ public class TokenService : ITokenService
 
         IList<string>? userRoles = await _userManager.GetRolesAsync(user);
 
-        List<Claim> claims = new() 
+        List<Claim> claims = new()
         {
             new Claim(JwtRegisteredClaimNames.Iss, issuer),
             new Claim(JwtRegisteredClaimNames.Aud, audience),

@@ -14,7 +14,7 @@ public class CreateUserRequest
     public string? Email { get; set; }
 
     [Required(ErrorMessage = "Password is required")]
-    [RegularExpression("^(?=.*[A-Z])(?=.*[a-z])(?=.*[\\d])(?=.*[\\W_)]).{8,}$", 
+    [RegularExpression("^(?=.*[A-Z])(?=.*[a-z])(?=.*[\\d])(?=.*[\\W_)]).{8,}$",
     ErrorMessage = "The password must contain at least eight characters, an uppercase letter, a lowercase letter, a number and a special character"),]
     public string? Password { get; set; }
 

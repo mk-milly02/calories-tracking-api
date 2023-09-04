@@ -14,7 +14,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     }
 
     #region Register
-    
+
     [Theory]
     [InlineData(null, null, null, null, null, null)]
     [InlineData("test", "project", "test.project", "abbentley", "abbentley", "test@tests.com")] //password complexity
@@ -23,7 +23,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     public async Task Register_WhenUserRegistrationRequestModelIsNotValid_ReturnsBadRequestWithValidationErrors(string fName, string lName, string uName, string password, string cpassword, string email)
     {
         // Given
-        UserRegistrationRequest model = new() 
+        UserRegistrationRequest model = new()
         {
             FirstName = fName,
             LastName = lName,
@@ -50,7 +50,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     public async Task Register_WhenEmailAlreadyExists_ReturnsBadRequestWithErrorMessage(string email)
     {
         // Given
-        UserRegistrationRequest model = new() 
+        UserRegistrationRequest model = new()
         {
             FirstName = "fName",
             LastName = "lName",
@@ -75,7 +75,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     public async Task Register_WhenUserIsSuccessfullyRegistered_ReturnsCreated()
     {
         // Given
-        UserRegistrationRequest model = new() 
+        UserRegistrationRequest model = new()
         {
             FirstName = "imagine",
             LastName = "dragons",
@@ -91,7 +91,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
         // Then
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
-    
+
     #endregion
 
     #region Login
@@ -102,7 +102,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     public async Task Login_WhenAuthenticationRequestModelIsNotValid_ReturnsBadRequestWithValidationErrors(string email, string password)
     {
         // Given
-        AuthenticationRequest model = new() 
+        AuthenticationRequest model = new()
         {
             Password = password,
             Email = email
@@ -125,7 +125,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     public async Task Login_WhenLoginCredentialsAreInvalid_ReturnsBadRequestWithErrorMessage(string email, string password)
     {
         // Given
-        AuthenticationRequest model = new() 
+        AuthenticationRequest model = new()
         {
             Password = password,
             Email = email
@@ -143,8 +143,8 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     public async Task Login_WhenUserIsSuccessfullyAuthenticated_ReturnsOkWithAuthenticationResponse()
     {
         // Given
-        
-        AuthenticationRequest model = new() 
+
+        AuthenticationRequest model = new()
         {
             Password = _configuration["Identity:RegularUser:Password"],
             Email = _configuration["Identity:RegularUser:Email"]
@@ -163,7 +163,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     #endregion
 
     #region EditUserProfile
-    
+
     [Fact]
     public async Task EditUserProfile_WhenUserHasNotBeenAuthenticated_ReturnsForbidden()
     {
@@ -172,7 +172,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
 
         // When
         HttpResponseMessage response = await _httpClient.PutAsJsonAsync("api/accounts/settings/profile", model);
-    
+
         // Then
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -184,10 +184,10 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
         EditUserProfileRequest model = new() { FirstName = null, LastName = null, Username = null };
 
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await _factory.GenerateUserTokenAsync("regular")}");
-    
+
         // When
         HttpResponseMessage response = await _httpClient.PutAsJsonAsync("api/accounts/settings/profile", model);
-    
+
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         ValidationProblemDetails? details = JsonConvert.DeserializeObject<ValidationProblemDetails>(await response.Content.ReadAsStringAsync());
@@ -200,19 +200,18 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
     {
         // Given
         EditUserProfileRequest model = new() { FirstName = "nick", LastName = "miller", Username = "julius.pepperwood" };
-        UserProfile? profile = await _factory.GetUserProfileAsync();
 
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await _factory.GenerateUserTokenAsync("regular")}");
-    
+
         // When
         HttpResponseMessage response = await _httpClient.PutAsJsonAsync("api/accounts/settings/profile", model);
-    
+
         // Then
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     #endregion
-    
+
     #region SetDailyCalorieLimit
 
     [Fact]
@@ -222,10 +221,10 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
         UserSettings model = new() { DailyCalorieLimit = -300 };
 
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await _factory.GenerateUserTokenAsync("regular")}");
-    
+
         // When
         HttpResponseMessage response = await _httpClient.PutAsJsonAsync("api/accounts/settings/daily-calorie-limit", model);
-    
+
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -237,10 +236,10 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
         UserSettings model = new() { DailyCalorieLimit = 300 };
 
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await _factory.GenerateUserTokenAsync("regular")}");
-    
+
         // When
         HttpResponseMessage response = await _httpClient.PutAsJsonAsync("api/accounts/settings/daily-calorie-limit", model);
-    
+
         // Then
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }

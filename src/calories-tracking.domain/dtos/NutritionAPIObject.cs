@@ -12,7 +12,7 @@ public class NutritionAPIObject
         {
             output += Convert.ToDouble(food.Calories);
         }
-        
+
         return output;
     }
 }

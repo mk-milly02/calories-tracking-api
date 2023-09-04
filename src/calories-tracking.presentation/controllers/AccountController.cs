@@ -1,9 +1,8 @@
 ﻿using calories_tracking.domain;
 using calories_tracking.services;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace calories_tracking.presentation;
 
@@ -48,7 +47,7 @@ public class AccountController : ControllerBase
 
         UserRegistrationResponse response = await _userService.RegisterAsync(request);
 
-        return response.Profile is null 
+        return response.Profile is null
             ? BadRequest(response)
             : Created($"api/users/{response.Profile.UserId}", response.Profile);
     }
@@ -105,8 +104,8 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> SetDailyCalorieLimit([FromBody] UserSettings settings)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        
-        return await _userService.SetDailyCalorieLimit(new(CurrentUserId!), settings) ? 
+
+        return await _userService.SetDailyCalorieLimit(new(CurrentUserId!), settings) ?
             NoContent() :
             BadRequest("Repository failed to set daily calorie limit.");
     }

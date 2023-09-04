@@ -12,12 +12,12 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<Meal>().HasKey(e => e.Id);
-        builder.Entity<Meal>().Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Entity<Meal>().Property(e => e.Text).HasMaxLength(100);
+        builder.Entity<Meal>().HasKey(x => x.Id);
+        builder.Entity<Meal>().Property(x => x.Id).ValueGeneratedOnAdd();
+        builder.Entity<Meal>().Property(x => x.Text).HasMaxLength(100);
 
-        builder.Entity<User>().Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Entity<User>().HasMany(e => e.Meals).WithOne().HasForeignKey(e => e.Id);
+        builder.Entity<User>().Property(x => x.Id).ValueGeneratedOnAdd();
+        builder.Entity<User>().HasMany(x => x.Meals).WithOne(x => x.User).HasForeignKey(x => x.Id);
 
         builder.Entity<Role>().HasData
         (

@@ -1,7 +1,6 @@
 ﻿using calories_tracking.domain;
 using calories_tracking.services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace calories_tracking.presentation;
@@ -71,8 +70,8 @@ public class UserController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         UserRegistrationResponse response = await _userService.CreateUserAsync(request);
-        return response.Profile is null 
-            ? BadRequest(response) 
+        return response.Profile is null
+            ? BadRequest(response)
             : CreatedAtAction(nameof(GetUserById), new { id = response.Profile.UserId }, response.Profile);
     }
 

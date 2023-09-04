@@ -66,11 +66,11 @@ public class UserControllerTests
         Assert.NotNull(profile.Role);
         Assert.True(profile.Role.Equals(nameof(Roles.RegularUser)));
     }
-    
+
     #endregion
 
     #region GetAllUsers
-    
+
     [Fact]
     public async Task GetAllUsers_WhenModelIsInValid_ReturnsBadRequestWithValidationErrors()
     {
@@ -80,10 +80,10 @@ public class UserControllerTests
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
         PaginationQueryParameters query = new() { Page = 0, Size = 0 };
-    
+
         // When
         HttpResponseMessage response = await httpClient.GetAsync($"api/users?page={query.Page}&size={query.Size}");
-    
+
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -97,10 +97,10 @@ public class UserControllerTests
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
         PaginationQueryParameters query = new() { Page = 1, Size = 10 };
-    
+
         // When
         HttpResponseMessage response = await httpClient.GetAsync($"api/users?page={query.Page}&size={query.Size}");
-    
+
         // Then
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         IEnumerable<UserProfile>? profiles = JsonConvert.DeserializeObject<IEnumerable<UserProfile>>(await response.Content.ReadAsStringAsync());
@@ -112,7 +112,7 @@ public class UserControllerTests
     #endregion
 
     #region CreateUser
-    
+
     [Fact]
     public async Task CreateUser_WhenCurrentUserDoesNotHavePermission_ReturnsForbidden()
     {
@@ -143,7 +143,7 @@ public class UserControllerTests
         // Given
         using CustomWebApplicationFactory<Program> factory = new();
         HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
-         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
         CreateUserRequest model = new()
         {
@@ -218,7 +218,7 @@ public class UserControllerTests
     }
 
     #endregion
-    
+
     #region UpdateUser
 
     [Fact]
@@ -325,11 +325,11 @@ public class UserControllerTests
         // Then
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
-        
+
     #endregion
 
     #region DeleteUser
-    
+
     [Fact]
     public async Task DeleteUser_WhenUserDoesNotExist_ReturnBadRequestWithErrorMessage()
     {
@@ -337,10 +337,10 @@ public class UserControllerTests
         using CustomWebApplicationFactory<Program> factory = new();
         HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
-    
+
         // When
         HttpResponseMessage response = await httpClient.DeleteAsync($"api/users/{Guid.NewGuid()}");
-    
+
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         UserActionResponse? result = JsonConvert.DeserializeObject<UserActionResponse>(await response.Content.ReadAsStringAsync());
@@ -360,7 +360,7 @@ public class UserControllerTests
 
         // When
         HttpResponseMessage response = await httpClient.DeleteAsync($"api/users/{user!.UserId}");
-    
+
         // Then
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }

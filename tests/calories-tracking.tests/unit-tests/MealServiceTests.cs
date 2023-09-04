@@ -31,7 +31,7 @@ public class MealServiceTests
 
         // When
         MealResponse? actual = await _mealService.AddMealAsync(request);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Create(It.IsAny<Meal>()), Times.Once);
 
@@ -58,10 +58,10 @@ public class MealServiceTests
 
         // When
         MealResponse? actual = await _mealService.AddMealAsync(request);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Create(It.IsAny<Meal>()), Times.Once);
-        
+
         Assert.NotNull(actual);
         Assert.True(_meals.Count is 1);
         Assert.Contains(meal, _meals);
@@ -82,13 +82,13 @@ public class MealServiceTests
             Text = "Waakye with fish",
             NumberOfCalories = 233
         };
-        
+
         _mealRepositoryMock.Setup(m => m.Update(It.IsAny<Meal>())).ReturnsAsync(meal);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
-    
+
         // When
         MealResponse? actual = await _mealService.UpdateMealAsync(Guid.NewGuid(), request);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Update(It.IsAny<Meal>()), Times.Once);
 
@@ -108,10 +108,10 @@ public class MealServiceTests
                            .Callback<Meal>(x => { meal.Created = x.Created; meal.Text = x.Text; expected = meal.ToMealResponse(); })
                            .ReturnsAsync(meal);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
-    
+
         // When
         MealResponse? actual = await _mealService.UpdateMealAsync(meal.Id, request);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Update(It.IsAny<Meal>()), Times.Once());
 
@@ -129,14 +129,14 @@ public class MealServiceTests
     {
         // Given
         _meals = _fixture.CreateMany<Meal>(5).ToList();
-        QueryParameters query = new() { S = "Text", Size = 4 };
+        FiltrationQueryParameters query = new() { S = "Text", Size = 4 };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAll()).ReturnsAsync(_meals);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
 
         // When
         IEnumerable<MealResponse> actual = await _mealService.GetMealsAsync(query);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.RetrieveAll(), Times.Once());
 
@@ -150,14 +150,14 @@ public class MealServiceTests
     {
         // Given
         _meals = _fixture.CreateMany<Meal>(10).ToList();
-        QueryParameters query = new() { Size = 5 };
+        FiltrationQueryParameters query = new() { Size = 5 };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAll()).ReturnsAsync(_meals);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
 
         // When
         IEnumerable<MealResponse> actual = await _mealService.GetMealsAsync(query);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.RetrieveAll(), Times.Once());
 
@@ -200,14 +200,14 @@ public class MealServiceTests
         };
         _meals = _fixture.CreateMany<Meal>(5).ToList();
         _meals.AddRange(mealsByUser);
-        QueryParameters query = new() { Size = 5, S = "toast" };
+        FiltrationQueryParameters query = new() { Size = 5, S = "toast" };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
-    
+
         // When
         IEnumerable<MealResponse> actual = await _mealService.GetMealsByUserAsync(userId, query);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once);
 
@@ -246,14 +246,14 @@ public class MealServiceTests
         };
         _meals = _fixture.CreateMany<Meal>(5).ToList();
         _meals.AddRange(mealsByUser);
-        QueryParameters query = new() { Size = 5, };
+        FiltrationQueryParameters query = new() { Size = 5, };
 
         _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
-    
+
         // When
         IEnumerable<MealResponse> actual = await _mealService.GetMealsByUserAsync(userId, query);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once);
 
@@ -278,7 +278,7 @@ public class MealServiceTests
 
         // When
         MealResponse? actual = await _mealService.GetMealByIdAsync(id);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Retrieve(It.IsAny<Guid>()), Times.Once);
 
@@ -298,7 +298,7 @@ public class MealServiceTests
 
         // When
         MealResponse? actual = await _mealService.GetMealByIdAsync(id);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Retrieve(It.IsAny<Guid>()), Times.Once);
 
@@ -342,12 +342,12 @@ public class MealServiceTests
         _meals.AddRange(mealsByUser);
         double expected = 2100;
 
-        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList()); 
+        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
-    
+
         // When
         double actual = await _mealService.GetTotalUserCaloriesForTodayAsync(userId);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once());
 
@@ -390,12 +390,12 @@ public class MealServiceTests
         _meals.AddRange(mealsByUser);
         double expected = 0;
 
-        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList()); 
+        _mealRepositoryMock.Setup(m => m.RetrieveAllByUser(It.IsAny<Guid>())).ReturnsAsync(_meals.Where(x => x.UserId == userId).ToList());
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object);
-    
+
         // When
         double actual = await _mealService.GetTotalUserCaloriesForTodayAsync(userId);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.RetrieveAllByUser(It.IsAny<Guid>()), Times.Once());
 
@@ -415,7 +415,7 @@ public class MealServiceTests
 
         // When
         bool? actual = await _mealService.RemoveMealAsync(Guid.NewGuid());
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Delete(It.IsAny<Guid>()), Times.Once());
 
@@ -435,7 +435,7 @@ public class MealServiceTests
 
         // When
         bool? actual = await _mealService.RemoveMealAsync(id);
-    
+
         // Then
         _mealRepositoryMock.Verify(m => m.Delete(It.IsAny<Guid>()), Times.Once());
 
