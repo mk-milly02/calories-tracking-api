@@ -109,7 +109,6 @@ public static class DependencyInjectionExtensions
 
         IConfiguration configuration = services.ServiceProvider.GetRequiredService<IConfiguration>();
         UserManager<User> userManager = services.ServiceProvider.GetRequiredService<UserManager<User>>();
-        PasswordHasher<User> hasher = new();
 
         if (await userManager.FindByNameAsync("admin") is null)
         {
@@ -120,12 +119,10 @@ public static class DependencyInjectionExtensions
             string password = configuration["Identity:Administrator:Password"]
                               ?? throw new NullReferenceException("Administrator password not provided");
 
-            string passwordSalt = Security.GenerateSalt();
-            string saltedPassword = Security.GenerateSaltedPassword(password, passwordSalt);
-            administrator.PasswordSalt = passwordSalt;
-            administrator.PasswordHash = hasher.HashPassword(administrator, saltedPassword);
+            administrator.PasswordSalt = Security.GenerateSalt();
+            string saltedPassword = Security.GenerateSaltedPassword(password, administrator.PasswordSalt);
 
-            await userManager.CreateAsync(administrator);
+            await userManager.CreateAsync(administrator, saltedPassword);
             await userManager.AddToRoleAsync(administrator, nameof(Roles.Administrator));
         }
 
@@ -138,12 +135,10 @@ public static class DependencyInjectionExtensions
             string mpassword = configuration["Identity:UserManager:Password"]
                               ?? throw new NullReferenceException("User manager's password not provided");
 
-            string mpasswordSalt = Security.GenerateSalt();
-            string msaltedPassword = Security.GenerateSaltedPassword(mpassword, mpasswordSalt);
-            manager.PasswordSalt = mpasswordSalt;
-            manager.PasswordHash = hasher.HashPassword(manager, msaltedPassword);
+            manager.PasswordSalt = Security.GenerateSalt();
+            string msaltedPassword = Security.GenerateSaltedPassword(mpassword, manager.PasswordSalt);
 
-            await userManager.CreateAsync(manager);
+            await userManager.CreateAsync(manager, msaltedPassword);
             await userManager.AddToRoleAsync(manager, nameof(Roles.UserManager));
         }
 
@@ -156,12 +151,10 @@ public static class DependencyInjectionExtensions
             string upassword = configuration["Identity:RegularUser:Password"]
                               ?? throw new NullReferenceException("Regular user's password not provided");
 
-            string upasswordSalt = Security.GenerateSalt();
-            string usaltedPassword = Security.GenerateSaltedPassword(upassword, upasswordSalt);
-            user.PasswordSalt = upasswordSalt;
-            user.PasswordHash = hasher.HashPassword(user, usaltedPassword);
+            user.PasswordSalt = Security.GenerateSalt();
+            string usaltedPassword = Security.GenerateSaltedPassword(upassword, user.PasswordSalt);
 
-            await userManager.CreateAsync(user);
+            await userManager.CreateAsync(user, user.PasswordSalt);
             await userManager.AddToRoleAsync(user, nameof(Roles.RegularUser));
         }
     }
