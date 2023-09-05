@@ -154,7 +154,7 @@ public static class DependencyInjectionExtensions
             user.PasswordSalt = Security.GenerateSalt();
             string usaltedPassword = Security.GenerateSaltedPassword(upassword, user.PasswordSalt);
 
-            await userManager.CreateAsync(user, user.PasswordSalt);
+            await userManager.CreateAsync(user, usaltedPassword);
             await userManager.AddToRoleAsync(user, nameof(Roles.RegularUser));
         }
     }
