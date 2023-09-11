@@ -106,7 +106,7 @@ public class UserService : IUserService
         User? user = await _userManager.FindByIdAsync(userId.ToString());
 
         double totalUserCaloriesForToday = _mealService.GetTotalUserCaloriesForTodayAsync(userId);
-        user!.HasExceededDailyCalorieLimit = totalUserCaloriesForToday < user.DailyCalorieLimit;
+        user!.HasExceededDailyCalorieLimit = totalUserCaloriesForToday > user.DailyCalorieLimit;
 
         try
         {
