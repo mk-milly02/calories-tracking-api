@@ -1,6 +1,7 @@
 ﻿using calories_tracking.domain;
 using calories_tracking.infrastructure;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net.Http.Json;
 
@@ -11,91 +12,114 @@ public class MealService : IMealService
     private readonly IMealRepository _repository;
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<MealService> _logger;
 
-    public MealService(IMealRepository repository, HttpClient httpClient, IConfiguration configuration)
+    public MealService(IMealRepository repository, HttpClient httpClient, IConfiguration configuration, ILogger<MealService> logger)
     {
         _repository = repository;
         _httpClient = httpClient;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<MealResponse?> AddMealAsync(CreateMealRequest request)
     {
         if (request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
 
-        Meal meal = request.ToMeal();
-        Meal? addedMeal = await _repository.Create(meal);
-        return addedMeal?.ToMealResponse();
+        try
+        {
+            Meal addedMeal = await _repository.CreateAsync(request.ToMeal());
+            return addedMeal.ToMealResponse();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles creating meal");
+            return null;
+        }
     }
 
-    public async Task<MealResponse?> UpdateMealAsync(Guid id, UpdateMealRequest request)
+    public async Task<bool> UpdateMealAsync(Guid id, UpdateMealRequest request)
     {
         if (request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
 
         Meal meal = request.ToMeal();
         meal.Id = id;
-        Meal? updatedMeal = await _repository.Update(meal);
-        return updatedMeal?.ToMealResponse();
+
+        try
+        {
+            await _repository.UpdateAsync(meal);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles updating meal with id:{id}", id);
+            return false;
+        }
     }
 
-    public async Task<IEnumerable<MealResponse>> GetMealsAsync(FiltrationQueryParameters query)
+    public PageList<MealResponse> GetMealsAsync(QueryParameters query)
     {
-        List<MealResponse> output = new();
-        IEnumerable<Meal> meals = await _repository.RetrieveAll();
+        List<MealResponse> responses = new();
 
-        if (!string.IsNullOrEmpty(query.S))
-        {
-            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase));
-        }
+        IEnumerable<Meal> meals = !string.IsNullOrEmpty(query.S)
+            ? _repository.RetrieveAllByCondition(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase))
+            : (IEnumerable<Meal>)_repository.RetrieveAll();
 
         foreach (Meal meal in meals)
         {
-            output.Add(meal.ToMealResponse());
+            responses.Add(meal.ToMealResponse());
         }
 
-        return output.Skip((query.Page - 1) * query.Size).Take(query.Size);
+        return PageList<MealResponse>.Create(responses, query.Page, query.Size);
     }
 
-    public async Task<IEnumerable<MealResponse>> GetMealsByUserAsync(Guid userId, FiltrationQueryParameters query)
+    public PageList<MealResponse> GetMealsByUserAsync(Guid userId, QueryParameters query)
     {
-        List<MealResponse> output = new();
-        IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
+        List<MealResponse> responses = new();
 
-        if (!string.IsNullOrEmpty(query.S))
-        {
-            meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase));
-        }
+        IEnumerable<Meal> meals = string.IsNullOrEmpty(query.S)
+            ? _repository.RetrieveAllByCondition(meal => meal.UserId.Equals(userId))
+            : _repository.RetrieveAllByCondition(meal => meal.UserId.Equals(userId) && meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase));
 
         foreach (Meal meal in meals)
         {
-            output.Add(meal.ToMealResponse());
+            responses.Add(meal.ToMealResponse());
         }
-        return output.Skip((query.Page - 1) * query.Size).Take(query.Size);
+
+        return PageList<MealResponse>.Create(responses, query.Page, query.Size);
     }
 
     public async Task<MealResponse?> GetMealByIdAsync(Guid id)
     {
-        Meal? meal = await _repository.Retrieve(id);
+        Meal? meal = await _repository.RetrieveAsync(id);
         return meal?.ToMealResponse();
     }
 
-    public async Task<double> GetTotalUserCaloriesForTodayAsync(Guid userId)
+    public double GetTotalUserCaloriesForTodayAsync(Guid userId)
     {
-        IEnumerable<Meal> meals = await _repository.RetrieveAllByUser(userId);
-        IEnumerable<Meal> mealsForToday = meals.Where(meal => meal.Created.Date.Equals(DateTime.Today));
+        IEnumerable<Meal> meals = _repository.RetrieveAllByCondition(meal => meal.UserId.Equals(userId) && meal.Created.Date.Equals(DateTime.Today));
 
         double totalUserCalories = 0;
 
-        foreach (Meal meal in mealsForToday)
+        foreach (Meal meal in meals)
         {
             totalUserCalories += meal.NumberOfCalories;
         }
         return totalUserCalories;
     }
 
-    public async Task<bool?> RemoveMealAsync(Guid id)
+    public async Task<bool> RemoveMealAsync(Guid id)
     {
-        return await _repository.Delete(id);
+        try
+        {
+            await _repository.DeleteAsync(id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles deleting meal with id:{id}", id);
+            return false;
+        }
     }
 
     private async Task<double> RetrieveNumberOfCalories(string query)
@@ -103,19 +127,10 @@ public class MealService : IMealService
         string? appId = _configuration["nutritionix-api:application-id"];
         string? appKey = _configuration["nutritionix-api:application-key"];
 
-        HttpRequestMessage message = new()
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new Uri($"https://trackapi.nutritionix.com/v2/natural/nutrients"),
-            Headers =
-            {
-                { "x-app-id", appId },
-                { "x-app-key", appKey },
-            },
-            Content = JsonContent.Create(query)
-        };
+        _httpClient.DefaultRequestHeaders.Add("x-app-id", appId);
+        _httpClient.DefaultRequestHeaders.Add("x-app-key", appKey);
 
-        HttpResponseMessage response = await _httpClient.SendAsync(message);
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync("https://trackapi.nutritionix.com/v2/natural/nutrients", query);
 
         if (response.IsSuccessStatusCode)
         {

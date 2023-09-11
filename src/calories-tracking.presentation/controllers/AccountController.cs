@@ -44,12 +44,13 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Register([FromBody] UserRegistrationRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (await _userService.EmailAlreadyExistsAsync(request.Email!)) return BadRequest("The email address is already in use.");
 
-        UserRegistrationResponse response = await _userService.RegisterAsync(request);
+        UserProfile? response = await _userService.RegisterAsync(request);
 
-        return response.Profile is null
-            ? BadRequest(response)
-            : Created($"api/users/{response.Profile.UserId}", response.Profile);
+        return response is null
+            ? BadRequest("User registeration was unsuccesful.")
+            : Created($"api/users/{response.UserId}", response);
     }
 
     /// <summary>
@@ -85,9 +86,9 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> EditUserProfile([FromBody] EditUserProfileRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-
-        UserActionResponse response = await _userService.EditUserProfileAsync(new(CurrentUserId!), request);
-        return response.Succeeded ? NoContent() : BadRequest(response);
+        return await _userService.EditUserProfileAsync(new(CurrentUserId!), request) 
+            ? NoContent() 
+            : BadRequest("Failed to update user profile.");
     }
 
     /// <summary>
@@ -105,9 +106,9 @@ public class AccountController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        return await _userService.SetDailyCalorieLimit(new(CurrentUserId!), settings) ?
-            NoContent() :
-            BadRequest("Repository failed to set daily calorie limit.");
+        return await _userService.SetDailyCalorieLimitAsync(new(CurrentUserId!), settings) 
+            ? NoContent() 
+            : BadRequest("Failed to set daily calorie limit.");
     }
 
     /// <summary>
@@ -122,6 +123,6 @@ public class AccountController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> CheckIfDailyCalorieLimitIsExceeded()
     {
-        return await _userService.HasExceededDailyCalorieLimit(new(CurrentUserId!)) ? NoContent() : BadRequest();
+        return await _userService.HasExceededDailyCalorieLimitAsync(new(CurrentUserId!)) ? NoContent() : BadRequest();
     }
 }

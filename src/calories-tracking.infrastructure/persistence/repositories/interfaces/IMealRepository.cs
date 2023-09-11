@@ -1,13 +1,14 @@
-﻿using calories_tracking.domain;
+﻿using System.Linq.Expressions;
+using calories_tracking.domain;
 
 namespace calories_tracking.infrastructure;
 
 public interface IMealRepository
 {
-    Task<Meal?> Create(Meal entry);
-    Task<Meal?> Retrieve(Guid id);
-    Task<IEnumerable<Meal>> RetrieveAll();
-    Task<IEnumerable<Meal>> RetrieveAllByUser(Guid userId);
-    Task<Meal?> Update(Meal entry);
-    Task<bool?> Delete(Guid id);
+    Task DeleteAsync(Guid id);
+    Task<Meal> CreateAsync(Meal entity);
+    Task<Meal?> RetrieveAsync(Guid id);
+    Task UpdateAsync(Meal entity);
+    IQueryable<Meal> RetrieveAll();
+    IQueryable<Meal> RetrieveAllByCondition(Expression<Func<Meal, bool>> condition);
 }

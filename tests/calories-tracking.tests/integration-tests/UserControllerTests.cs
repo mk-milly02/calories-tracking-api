@@ -79,7 +79,7 @@ public class UserControllerTests
         HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
-        PaginationQueryParameters query = new() { Page = 0, Size = 0 };
+        QueryParameters query = new() { Page = 0, Size = 0 };
 
         // When
         HttpResponseMessage response = await httpClient.GetAsync($"api/users?page={query.Page}&size={query.Size}");
@@ -96,17 +96,17 @@ public class UserControllerTests
         HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
 
-        PaginationQueryParameters query = new() { Page = 1, Size = 10 };
+        QueryParameters query = new() { Page = 1, Size = 10 };
 
         // When
         HttpResponseMessage response = await httpClient.GetAsync($"api/users?page={query.Page}&size={query.Size}");
 
         // Then
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        IEnumerable<UserProfile>? profiles = JsonConvert.DeserializeObject<IEnumerable<UserProfile>>(await response.Content.ReadAsStringAsync());
+        PageList<UserProfile>? profiles = JsonConvert.DeserializeObject<PageList<UserProfile>>(await response.Content.ReadAsStringAsync());
         Assert.NotNull(profiles);
-        Assert.Equal(3, profiles.Count());
-        Assert.NotNull(profiles.First().Role);
+        Assert.Equal(3, profiles.Items.Count);
+        Assert.NotNull(profiles.Items.First().Role);
     }
 
     #endregion
@@ -186,10 +186,7 @@ public class UserControllerTests
 
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        UserRegistrationResponse? result = JsonConvert.DeserializeObject<UserRegistrationResponse>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(result);
-        Assert.Null(result.Profile);
-        Assert.Equal("DuplicateEmail", result.Errors.First().Code);
+        Assert.Equal("The email address is already in use.", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -272,35 +269,6 @@ public class UserControllerTests
     }
 
     [Fact]
-    public async Task UpdateUser_WhenUserDoesNotExist_ReturnsABadRequestWithUserActionResponse()
-    {
-        // Given
-        using CustomWebApplicationFactory<Program> factory = new();
-        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("manager")}");
-
-        UpdateUserRequest model = new()
-        {
-            FirstName = "nullandvoid",
-            LastName = "nullandvoid",
-            Username = "nulldnad",
-            ExpectedNumberOfCaloriesPerDay = 100,
-            IsCaloriesDeficient = false
-        };
-
-        Guid userId = Guid.NewGuid();
-
-        // When
-        HttpResponseMessage response = await httpClient.PutAsJsonAsync($"api/users/{userId}", model);
-
-        // Then
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        UserActionResponse? result = JsonConvert.DeserializeObject<UserActionResponse>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(result);
-        Assert.False(result.Succeeded);
-    }
-
-    [Fact]
     public async Task UpdateUser_WhenRepositorySuccessfullyUpdatesUser_ReturnsNoContent()
     {
         // Given
@@ -343,9 +311,7 @@ public class UserControllerTests
 
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        UserActionResponse? result = JsonConvert.DeserializeObject<UserActionResponse>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(result);
-        Assert.False(result.Succeeded);
+        Assert.Equal("Failed to delete user.", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]

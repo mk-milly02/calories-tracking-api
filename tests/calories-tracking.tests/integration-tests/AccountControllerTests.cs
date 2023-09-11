@@ -65,10 +65,7 @@ public class AccountControllerTests : IClassFixture<CustomWebApplicationFactory<
 
         // Then
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        UserRegistrationResponse? result = JsonConvert.DeserializeObject<UserRegistrationResponse>(await response.Content.ReadAsStringAsync());
-        Assert.NotNull(result);
-        Assert.Null(result.Profile);
-        Assert.Equal("DuplicateEmail", result.Errors.First().Code);
+        Assert.Equal("The email address is already in use.", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]

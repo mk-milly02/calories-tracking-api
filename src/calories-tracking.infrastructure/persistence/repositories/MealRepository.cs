@@ -1,4 +1,5 @@
-﻿using calories_tracking.domain;
+﻿using System.Linq.Expressions;
+using calories_tracking.domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -13,30 +14,27 @@ public class MealRepository : IMealRepository
         _context = context;
     }
 
-    public async Task<Meal?> Create(Meal meal)
+    public async Task<Meal> CreateAsync(Meal entity)
     {
-        EntityEntry<Meal> added = await _context.Meals.AddAsync(meal);
-        return await _context.SaveChangesAsync() > 0 ? added.Entity : null;
+        EntityEntry<Meal> added = await _context.Meals.AddAsync(entity);
+        await _context.SaveChangesAsync();
+        return added.Entity;
+    }
+    
+    public async Task DeleteAsync(Guid id)
+    {
+        _context.Remove(new Meal { Id = id });
+        await _context.SaveChangesAsync();
     }
 
-    public async Task<bool?> Delete(Guid id)
+    public IQueryable<Meal> RetrieveAll()
     {
-        Meal? existingMeal = await _context.Meals.FindAsync(id);
-
-        if (existingMeal is null) { return null; }
-        _context.Meals.Remove(existingMeal);
-
-        return await _context.SaveChangesAsync() > 0;
+        return _context.Meals.AsNoTracking();
     }
 
-    public async Task<Meal?> Retrieve(Guid id)
+    public IQueryable<Meal> RetrieveAllByCondition(Expression<Func<Meal, bool>> condition)
     {
-        return await _context.Meals.AsNoTracking().SingleOrDefaultAsync(meal => meal.Id.Equals(id));
-    }
-
-    public async Task<IEnumerable<Meal>> RetrieveAll()
-    {
-        return await _context.Meals.AsNoTracking().ToListAsync();
+        return _context.Meals.AsNoTracking().Where(condition);
     }
 
     public async Task<IEnumerable<Meal>> RetrieveAllByUser(Guid userId)
@@ -44,9 +42,14 @@ public class MealRepository : IMealRepository
         return await _context.Meals.AsNoTracking().Where(meal => meal.UserId.Equals(userId)).ToListAsync();
     }
 
-    public async Task<Meal?> Update(Meal meal)
+    public async Task<Meal?> RetrieveAsync(Guid id)
     {
-        EntityEntry<Meal> updated = _context.Meals.Update(meal);
-        return await _context.SaveChangesAsync() > 0 ? updated.Entity : null;
+        return await _context.Meals.SingleOrDefaultAsync(meal => meal.Id.Equals(id));
+    }
+
+    public async Task UpdateAsync(Meal entity)
+    {
+        _context.Meals.Update(entity);
+        await _context.SaveChangesAsync();
     }
 }

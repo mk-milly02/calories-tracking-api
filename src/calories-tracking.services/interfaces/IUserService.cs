@@ -4,14 +4,15 @@ namespace calories_tracking.services;
 
 public interface IUserService
 {
-    Task<UserRegistrationResponse> RegisterAsync(UserRegistrationRequest request);
-    Task<AuthenticationResponse?> AuthenticateAsync(AuthenticationRequest request);
-    Task<UserRegistrationResponse> CreateUserAsync(CreateUserRequest request);
-    Task<UserActionResponse> UpdateUserAsync(Guid userId, UpdateUserRequest request);
+    Task<PageList<UserProfile>> GetAllUsersAsync(QueryParameters query);
+    Task<UserProfile?> RegisterAsync(UserRegistrationRequest request);
+    Task<UserProfile?> CreateUserAsync(CreateUserRequest request);
     Task<UserProfile?> GetUserByIdAsync(Guid userId);
-    Task<IEnumerable<UserProfile>> GetAllUsers(PaginationQueryParameters query);
-    Task<UserActionResponse> EditUserProfileAsync(Guid userId, EditUserProfileRequest request);
-    Task<UserActionResponse> RemoveUserAsync(Guid userId);
-    Task<bool> HasExceededDailyCalorieLimit(Guid userId);
-    Task<bool> SetDailyCalorieLimit(Guid userId, UserSettings settings);
+    Task<AuthenticationResponse?> AuthenticateAsync(AuthenticationRequest request);
+    Task<bool> UpdateUserAsync(Guid userId, UpdateUserRequest request);
+    Task<bool> EditUserProfileAsync(Guid userId, EditUserProfileRequest request);
+    Task<bool> RemoveUserAsync(Guid userId);
+    Task<bool> HasExceededDailyCalorieLimitAsync(Guid userId);
+    Task<bool> SetDailyCalorieLimitAsync(Guid userId, UserSettings settings);
+    Task<bool> EmailAlreadyExistsAsync(string email);
 }

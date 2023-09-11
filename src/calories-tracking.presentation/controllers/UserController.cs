@@ -49,10 +49,10 @@ public class UserController : ControllerBase
     // GET: api/users?page=1&size=10
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserProfile>))]
-    public async Task<IActionResult> GetAllUsers([FromQuery] PaginationQueryParameters query)
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PageList<UserProfile>))]
+    public async Task<IActionResult> GetAllUsers([FromQuery] QueryParameters query)
     {
-        return ModelState.IsValid ? Ok(await _userService.GetAllUsers(query)) : BadRequest(ModelState);
+        return ModelState.IsValid ? Ok(await _userService.GetAllUsersAsync(query)) : BadRequest(ModelState);
     }
 
     /// <summary>
@@ -68,11 +68,12 @@ public class UserController : ControllerBase
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (await _userService.EmailAlreadyExistsAsync(request.Email!)) return BadRequest("The email address is already in use.");
 
-        UserRegistrationResponse response = await _userService.CreateUserAsync(request);
-        return response.Profile is null
-            ? BadRequest(response)
-            : CreatedAtAction(nameof(GetUserById), new { id = response.Profile.UserId }, response.Profile);
+        UserProfile? response = await _userService.CreateUserAsync(request);
+        return response is null
+            ? BadRequest("Failed to create user.")
+            : CreatedAtAction(nameof(GetUserById), new { id = response.UserId }, response);
     }
 
     /// <summary>
@@ -90,8 +91,8 @@ public class UserController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        UserActionResponse response = await _userService.UpdateUserAsync(id, request);
-        return response.Succeeded ? NoContent() : BadRequest(response);
+        bool response = await _userService.UpdateUserAsync(id, request);
+        return response ? NoContent() : BadRequest("Failed to update user profile.");
     }
 
     /// <summary>
@@ -106,7 +107,8 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        UserActionResponse response = await _userService.RemoveUserAsync(id);
-        return response.Succeeded ? NoContent() : BadRequest(response);
+        return await _userService.RemoveUserAsync(id) 
+            ? NoContent() 
+            : BadRequest("Failed to delete user.");
     }
 }

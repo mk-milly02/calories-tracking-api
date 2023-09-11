@@ -1,5 +1,6 @@
 ﻿using calories_tracking.domain;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace calories_tracking.services;
 
@@ -8,33 +9,32 @@ public class UserService : IUserService
     private readonly IMealService _mealService;
     private readonly UserManager<User> _userManager;
     private readonly ITokenService _tokenService;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(IMealService mealService, UserManager<User> userManager, ITokenService tokenService)
+    public UserService(IMealService mealService, UserManager<User> userManager, ITokenService tokenService, ILogger<UserService> logger)
     {
         _mealService = mealService;
         _userManager = userManager;
         _tokenService = tokenService;
+        _logger = logger;
     }
 
-    public async Task<UserActionResponse> RemoveUserAsync(Guid userId)
+    public async Task<bool> RemoveUserAsync(Guid userId)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
-        if (user is null)
+        try
         {
-            return new()
-            {
-                Succeeded = false,
-                Error = new()
-                {
-                    Code = "NotFound",
-                    Description = $"User with id:{userId} does not exist."
-                }
-            };
+            await _userManager.DeleteAsync(user!);
+            return true;
         }
-        return new(await _userManager.DeleteAsync(user!));
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles removing user with id:{id}", userId);
+            return false;
+        }
     }
 
-    public async Task<IEnumerable<UserProfile>> GetAllUsers(PaginationQueryParameters query)
+    public async Task<PageList<UserProfile>> GetAllUsersAsync(QueryParameters query)
     {
         List<UserProfile> profiles = new();
         IEnumerable<User> users = _userManager.Users.ToList();
@@ -46,7 +46,7 @@ public class UserService : IUserService
             profiles.Add(profile);
         }
 
-        return profiles.Skip((query.Page - 1) * query.Size).Take(query.Size);
+        return PageList<UserProfile>.Create(profiles, query.Page, query.Size);
     }
 
     public async Task<UserProfile?> GetUserByIdAsync(Guid userId)
@@ -63,7 +63,7 @@ public class UserService : IUserService
         return null;
     }
 
-    public async Task<UserActionResponse> EditUserProfileAsync(Guid userId, EditUserProfileRequest request)
+    public async Task<bool> EditUserProfileAsync(Guid userId, EditUserProfileRequest request)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
 
@@ -71,26 +71,53 @@ public class UserService : IUserService
         user.LastName = request.LastName;
         user.UserName = request.Username;
 
-        return new(await _userManager.UpdateAsync(user));
+        try
+        {
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles editing user with id:{id}", userId);
+            return false;
+        }
     }
 
-    public async Task<bool> SetDailyCalorieLimit(Guid userId, UserSettings settings)
+    public async Task<bool> SetDailyCalorieLimitAsync(Guid userId, UserSettings settings)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
 
         user!.DailyCalorieLimit = settings.DailyCalorieLimit;
-        IdentityResult result = await _userManager.UpdateAsync(user);
-        return result.Succeeded;
+
+        try
+        {
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles setting daily calorie limit of user with id:{id}", userId);
+            return false;
+        }
     }
 
-    public async Task<bool> HasExceededDailyCalorieLimit(Guid userId)
+    public async Task<bool> HasExceededDailyCalorieLimitAsync(Guid userId)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
 
-        double totalUserCaloriesForToday = await _mealService.GetTotalUserCaloriesForTodayAsync(userId);
+        double totalUserCaloriesForToday = _mealService.GetTotalUserCaloriesForTodayAsync(userId);
         user!.HasExceededDailyCalorieLimit = totalUserCaloriesForToday < user.DailyCalorieLimit;
-        IdentityResult result = await _userManager.UpdateAsync(user);
-        return result.Succeeded;
+
+        try
+        {
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles updating HasExceededDailyCalorieLimit of user with id:{id}", userId);
+            return false;
+        }
     }
 
     public async Task<AuthenticationResponse?> AuthenticateAsync(AuthenticationRequest request)
@@ -102,61 +129,69 @@ public class UserService : IUserService
         return await _userManager.CheckPasswordAsync(user, saltedPassword) ? await _tokenService.GenerateTokenAsync(user) : null;
     }
 
-    public async Task<UserRegistrationResponse> RegisterAsync(UserRegistrationRequest request)
+    public async Task<UserProfile?> RegisterAsync(UserRegistrationRequest request)
     {
         User user = request.ToUser();
         user.PasswordSalt = Security.GenerateSalt();
         string saltedPassword = Security.GenerateSaltedPassword(request.Password!, user.PasswordSalt);
 
-        IdentityResult userCreatedResult = await _userManager.CreateAsync(user, saltedPassword);
-        UserRegistrationResponse response = new();
-
-        if (!userCreatedResult.Succeeded) { response.Errors.AddRange(userCreatedResult.Errors); return response; }
-
-        await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
-        response.Profile = user.ToUserProfile(nameof(Roles.RegularUser));
-        return response;
+        try
+        {
+            await _userManager.CreateAsync(user, saltedPassword);
+            await _userManager.AddToRoleAsync(user, Roles.RegularUser.ToString());
+            return user.ToUserProfile(nameof(Roles.RegularUser));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles registering user.");
+            return null;
+        }
     }
 
-    public async Task<UserRegistrationResponse> CreateUserAsync(CreateUserRequest request)
+    public async Task<UserProfile?> CreateUserAsync(CreateUserRequest request)
     {
         User user = request.ToUser();
         user.PasswordSalt = Security.GenerateSalt();
         string saltedPassword = Security.GenerateSaltedPassword(request.Password!, user.PasswordSalt);
 
-        IdentityResult userCreatedResult = await _userManager.CreateAsync(user, saltedPassword);
-        UserRegistrationResponse response = new();
-
-        if (!userCreatedResult.Succeeded) { response.Errors.AddRange(userCreatedResult.Errors); return response; }
-
-        await _userManager.AddToRoleAsync(user, request.Role!);
-        response.Profile = user.ToUserProfile(request.Role!);
-        return response;
+        try
+        {
+            await _userManager.CreateAsync(user, saltedPassword);
+            await _userManager.AddToRoleAsync(user, request.Role!);
+            return user.ToUserProfile(request.Role!);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles creating user.");
+            return null;
+        }
     }
 
-    public async Task<UserActionResponse> UpdateUserAsync(Guid userId, UpdateUserRequest request)
+    public async Task<bool> UpdateUserAsync(Guid userId, UpdateUserRequest request)
     {
         User? user = await _userManager.FindByIdAsync(userId.ToString());
 
-        if (user is null)
-        {
-            return new()
-            {
-                Succeeded = false,
-                Error = new()
-                {
-                    Code = "NotFound",
-                    Description = $"User with id:{userId} does not exist."
-                }
-            };
-        }
-
-        user.FirstName = request.FirstName;
+        user!.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.UserName = request.Username;
         user.DailyCalorieLimit = request.ExpectedNumberOfCaloriesPerDay;
         user.HasExceededDailyCalorieLimit = request.IsCaloriesDeficient;
 
-        return new(await _userManager.UpdateAsync(user));
+        try
+        {
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occured whiles updating user with id:{id}", userId);
+            return false;
+        }
+    }
+    
+    public async Task<bool> EmailAlreadyExistsAsync(string email)
+    {
+        User? user = await _userManager.FindByEmailAsync(email);
+        return user is not null;
     }
 }
