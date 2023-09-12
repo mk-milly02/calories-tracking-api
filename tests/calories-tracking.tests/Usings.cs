@@ -14,3 +14,6 @@ global using Newtonsoft.Json;
 global using System.Net;
 global using System.Net.Http.Json;
 global using Xunit;
+global using System.Linq.Expressions;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Logging.Abstractions;

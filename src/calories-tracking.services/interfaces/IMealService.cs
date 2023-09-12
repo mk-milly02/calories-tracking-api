@@ -8,7 +8,7 @@ public interface IMealService
     Task<MealResponse?> AddMealAsync(CreateMealRequest request);
     PageList<MealResponse> GetMealsAsync(QueryParameters query);
     PageList<MealResponse> GetMealsByUserAsync(Guid userId, QueryParameters query);
-    Task<bool> UpdateMealAsync(Guid id, UpdateMealRequest request);
+    Task<bool?> UpdateMealAsync(Guid id, UpdateMealRequest request);
     Task<bool> RemoveMealAsync(Guid id);
     double GetTotalUserCaloriesForTodayAsync(Guid userId);
 }

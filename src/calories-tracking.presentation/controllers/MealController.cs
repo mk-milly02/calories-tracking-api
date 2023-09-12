@@ -128,13 +128,14 @@ public class MealController : ControllerBase
     [HttpPut("{id}")]
     [Authorize(Policy = "MustBeAnAdministratorOrARegularUser")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MealResponse))]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateMeal(Guid id, [FromBody] UpdateMealRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        bool result = await _mealService.UpdateMealAsync(id, request);
-        return result ? Ok($"Meal with id:{id} was successfully updated.") : BadRequest("Failed to update meal.");
+        bool? result = await _mealService.UpdateMealAsync(id, request);
+        if (result is null) return BadRequest($"Meal with id:{id} does not exist.");
+        return result.Value ? Ok($"Meal with id:{id} was successfully updated.") : BadRequest("Failed to update meal.");
     }
 
     /// <summary>

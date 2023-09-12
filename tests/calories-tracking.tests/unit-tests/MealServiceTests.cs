@@ -1,8 +1,4 @@
-﻿using System.Linq.Expressions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
-namespace calories_tracking.tests;
+﻿namespace calories_tracking.tests;
 
 public class MealServiceTests
 {
@@ -85,6 +81,7 @@ public class MealServiceTests
     public async void UpdateMealAsync_WhenRepositoryFailsToUpdateMeal_ReturnNull()
     {
         // Given
+        Meal meal = _fixture.Create<Meal>();
         UpdateMealRequest request = new()
         {
             Text = "Waakye with fish",
@@ -92,10 +89,11 @@ public class MealServiceTests
         };
 
         _mealRepositoryMock.Setup(m => m.UpdateAsync(It.IsAny<Meal>())).ThrowsAsync(new InvalidOperationException());
+        _mealRepositoryMock.Setup(m => m.RetrieveAsync(It.IsAny<Guid>())).ReturnsAsync(meal);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object, _logger);
 
         // When
-        bool actual = await _mealService.UpdateMealAsync(Guid.NewGuid(), request);
+        bool? actual = await _mealService.UpdateMealAsync(Guid.NewGuid(), request);
 
         // Then
         _mealRepositoryMock.Verify(m => m.UpdateAsync(It.IsAny<Meal>()), Times.Once);
@@ -108,13 +106,15 @@ public class MealServiceTests
     public async void UpdateMealAsync_WhenRepositorySuccessfullyUpdatesMeal_ReturnUpdatedMeal()
     {
         // Given
+        Meal meal = _fixture.Create<Meal>();
         UpdateMealRequest request = new() { Text = "Waakye with fish", NumberOfCalories = 1000 };
 
         _mealRepositoryMock.Setup(m => m.UpdateAsync(It.IsAny<Meal>()));
+        _mealRepositoryMock.Setup(m => m.RetrieveAsync(It.IsAny<Guid>())).ReturnsAsync(meal);
         _mealService = new MealService(_mealRepositoryMock.Object, _httpClientMock.Object, _configurationMock.Object, _logger);
 
         // When
-        bool actual = await _mealService.UpdateMealAsync(Guid.NewGuid(), request);
+        bool? actual = await _mealService.UpdateMealAsync(Guid.NewGuid(), request);
 
         // Then
         _mealRepositoryMock.Verify(m => m.UpdateAsync(It.IsAny<Meal>()), Times.Once());

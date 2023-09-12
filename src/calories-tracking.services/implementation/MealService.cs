@@ -38,16 +38,19 @@ public class MealService : IMealService
         }
     }
 
-    public async Task<bool> UpdateMealAsync(Guid id, UpdateMealRequest request)
+    public async Task<bool?> UpdateMealAsync(Guid id, UpdateMealRequest request)
     {
         if (request.NumberOfCalories is 0) { request.NumberOfCalories = await RetrieveNumberOfCalories(request.Text!); }
 
-        Meal meal = request.ToMeal();
-        meal.Id = id;
+        Meal? existing = await _repository.RetrieveAsync(id);
+        if (existing is null) { return null; }
+
+        existing.Text = request.Text;
+        existing.NumberOfCalories = request.NumberOfCalories;
 
         try
         {
-            await _repository.UpdateAsync(meal);
+            await _repository.UpdateAsync(existing);
             return true;
         }
         catch (Exception ex)
