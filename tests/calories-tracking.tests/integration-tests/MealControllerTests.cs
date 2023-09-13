@@ -108,6 +108,29 @@ public class MealControllerTests
     }
 
     [Fact]
+    public async void GetAllMealsByUser_WhenModelIsValidAndTheUserExistsAndSearchStringHasNoMatch_ReturnsOk()
+    {
+        // Given
+        using CustomWebApplicationFactory<Program> factory = new();
+        HttpClient httpClient = factory.CreateDefaultClient(new Uri("https://localhost:7213"));
+
+        QueryParameters query = new() { Page = 1, S = "Kenkey", Size = 5 };
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {await factory.GenerateUserTokenAsync("admin")}");
+
+        UserProfile? user = await factory.GetUserProfileAsync();
+        await factory.AddMealsAsync(user!.UserId);
+
+        // When
+        HttpResponseMessage response = await httpClient.GetAsync($"api/meals/:user/{user.UserId}?s={query.S}&page={query.Page}&size={query.Size}");
+
+        // Then
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        PageList<MealResponse>? meals = JsonConvert.DeserializeObject<PageList<MealResponse>>(await response.Content.ReadAsStringAsync());
+        Assert.NotNull(meals);
+        Assert.Empty(meals.Items);
+    }
+
+    [Fact]
     public async void AddMeal_WhenCreateMealRequestModelIsInvalid_ReturnsBadRequestWithValidationErrors()
     {
         // Given

@@ -80,9 +80,9 @@ public class MealService : IMealService
     {
         List<MealResponse> responses = new();
 
-        IEnumerable<Meal> meals = string.IsNullOrEmpty(query.S)
-            ? _repository.RetrieveAllByCondition(meal => meal.UserId.Equals(userId))
-            : _repository.RetrieveAllByCondition(meal => meal.UserId.Equals(userId) && meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase));
+        IEnumerable<Meal> meals = _repository.RetrieveAllByCondition(meal => meal.UserId.Equals(userId));
+
+        if (!string.IsNullOrEmpty(query.S)) { meals = meals.Where(meal => meal.Text!.Contains(query.S, StringComparison.OrdinalIgnoreCase)); }
 
         foreach (Meal meal in meals)
         {

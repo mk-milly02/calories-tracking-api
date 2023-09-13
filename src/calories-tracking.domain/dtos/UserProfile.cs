@@ -12,5 +12,4 @@ public class UserProfile
     public string? Role { get; set; }
     public double DailyCalorieLimit { get; set; }
     public bool HasExceededDailyCalorieLimit { get; set; }
-    public List<IdentityError> Errors { get; set; } = new();
 }

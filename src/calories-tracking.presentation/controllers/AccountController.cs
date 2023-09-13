@@ -15,14 +15,17 @@ namespace calories_tracking.presentation;
 public class AccountController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IMealService _mealService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountController"/> class.
     /// </summary>
-    /// <param name="userService">The user service providing account-related functionality.</param> 
-    public AccountController(IUserService userService)
+    /// <param name="userService">The user service providing account-related functionality.</param>
+    /// <param name="mealService">The meal service providing meal-related functionality.</param> 
+    public AccountController(IUserService userService, IMealService mealService)
     {
         _userService = userService;
+        _mealService = mealService;
     }
 
     /// <summary>
@@ -89,6 +92,37 @@ public class AccountController : ControllerBase
         return await _userService.EditUserProfileAsync(new(CurrentUserId!), request) 
             ? NoContent() 
             : BadRequest("Failed to update user profile.");
+    }
+
+    /// <summary>
+    /// Allows the current user to view account details.
+    /// </summary>
+    /// <returns></returns>
+    /// <remarks>Allows authenticated users i.e regular users, user managers or administrators.</remarks>
+    /// GET: api/accounts/profile
+    [HttpGet("profile")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfile))]
+    public async Task<IActionResult> GetUserProfile()
+    {
+        return Ok(await _userService.GetUserByIdAsync(new(CurrentUserId!)));
+    }
+
+    /// <summary>
+    /// Allows the current user to view meals.
+    /// </summary>
+    /// <param name="parameters">Query parameters for pagination and filtering</param>
+    /// <returns>A list of meals added by the current user.</returns>
+    /// <remarks>Allows authenticated users i.e regular users only.</remarks>
+    /// GET: api/accounts/meals
+    [HttpGet("meals")]
+    [Authorize(Policy = "MustBeARegularUser")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PageList<MealResponse>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult GetMeals([FromQuery] QueryParameters parameters)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        return Ok(_mealService.GetMealsByUserAsync(new(CurrentUserId!), parameters));
     }
 
     /// <summary>
